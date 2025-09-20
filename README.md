@@ -299,11 +299,11 @@ production_data {
 ```sql
 emission_resources {
   id: UUID (PK)
-  resource_name: VARCHAR(255)
-  resource_type: VARCHAR(100)                -- fuel, electricity, steam, etc.
+  scope: VARCHAR(255)
   category: VARCHAR(100)                     -- coal, natural_gas, biomass, etc.
+  name: VARCHAR(255)
+  type: VARCHAR(100)                -- fuel, electricity, steam, etc.
   scope: ENUM('scope1', 'scope2')
-  is_alternative_fuel: BOOLEAN               -- Flag for alternative fuel options
   description: TEXT
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
