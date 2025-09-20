@@ -13,10 +13,8 @@ router.get('/', async (req, res) => {
   try {
     const startTime = Date.now();
     
-    // Skip database health check for Phase 1
-    // TODO: Enable database health check in Phase 3
-    // const dbHealth = await healthCheck();
-    const dbHealth = { status: 'skipped', message: 'Database not configured for Phase 1' };
+    // Database health check for Phase 3
+    const dbHealth = await healthCheck();
     
     // Check basic system metrics
     const systemHealth = {
@@ -66,10 +64,8 @@ router.get('/', async (req, res) => {
  */
 router.get('/ready', async (req, res) => {
   try {
-    // Skip database readiness check for Phase 1
-    // TODO: Enable database readiness check in Phase 3
-    // const dbHealth = await healthCheck();
-    const dbHealth = { status: 'skipped' };
+    // Database readiness check for Phase 3
+    const dbHealth = await healthCheck();
     
     const isReady = dbHealth.status === 'healthy' || dbHealth.status === 'skipped';
     

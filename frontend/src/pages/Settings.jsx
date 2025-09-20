@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useData } from '../context/DataContext';
+import { useEmission } from '../contexts/EmissionContext';
+import { useFacility } from '../contexts/FacilityContext';
+import { useUser } from '../contexts/UserContext';
 import {
   CogIcon,
   BuildingOfficeIcon,
@@ -12,28 +14,56 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Settings = () => {
-  const { facilities, mockData } = useData();
+  const { facilities } = useFacility();
+  const { 
+    resources: emissionResources, 
+    libraries: emissionFactorLibraries,
+    organizationConfigurations,
+    facilityAssignments,
+    fetchOrganizationConfigurations,
+    fetchFacilityAssignments,
+    configureOrganizationResource,
+    assignResourceToFacility
+  } = useEmission();
   const [activeTab, setActiveTab] = useState('organization');
   const [organizationResources, setOrganizationResources] = useState({});
   const [facilityResources, setFacilityResources] = useState({});
 
+  // Mock data for emission factors (since they're not in the context yet)
+  const emissionFactors = [];
+  const orgResources = [];
 
-  // Get all relevant data from mock data
-  const emissionResources = mockData.emissionResources || [];
-  const emissionFactorLibraries = mockData.emissionFactorLibraries || [];
-  const emissionFactors = mockData.emissionFactors || [];
-  const orgResources = mockData.organizationResources || [];
-
-  // Initialize organization resources selection
+  // Initialize organization resources selection based on actual configurations
   useEffect(() => {
     const initialSelection = {};
-    orgResources.forEach(orgRes => {
-      if (orgRes.is_selected) {
-        initialSelection[orgRes.resource_id] = true;
-      }
+    organizationConfigurations.forEach(config => {
+      initialSelection[config.resource_id] = true;
     });
     setOrganizationResources(initialSelection);
-  }, [orgResources]);
+  }, [organizationConfigurations]);
+
+  // Initialize facility resources selection based on actual assignments
+  useEffect(() => {
+    const initialFacilitySelection = {};
+    Object.entries(facilityAssignments).forEach(([facilityId, assignments]) => {
+      initialFacilitySelection[facilityId] = {};
+      assignments.forEach(assignment => {
+        initialFacilitySelection[facilityId][assignment.resource_id] = true;
+      });
+    });
+    setFacilityResources(initialFacilitySelection);
+  }, [facilityAssignments]);
+
+  // Load facility assignments when switching to facility assignment tab
+  useEffect(() => {
+    if (activeTab === 'facility-assignment' && facilities.length > 0) {
+      facilities.forEach(facility => {
+        if (!facilityAssignments[facility.id]) {
+          fetchFacilityAssignments(facility.id);
+        }
+      });
+    }
+  }, [activeTab, facilities, facilityAssignments, fetchFacilityAssignments]);
   
   const tabs = [
     { id: 'organization', name: 'Organization', icon: BuildingOfficeIcon },
@@ -42,22 +72,89 @@ const Settings = () => {
   ];
 
   // Handle organization-level resource selection
-  const handleOrganizationResourceToggle = (resourceId) => {
-    setOrganizationResources(prev => ({
-      ...prev,
-      [resourceId]: !prev[resourceId]
-    }));
+  const handleOrganizationResourceToggle = async (resourceId) => {
+    const isCurrentlySelected = organizationResources[resourceId];
+    
+    if (!isCurrentlySelected) {
+      // Need to configure this resource - find the first emission factor for it
+      const emissionFactors = []; // This should come from context when available
+      const factor = emissionFactors.find(f => f.resource_id === resourceId);
+      
+      if (factor) {
+        try {
+          const result = await configureOrganizationResource({
+            resourceId: resourceId,
+            emissionFactorId: factor.id
+          });
+          
+          if (result.success) {
+            console.log('✅ Resource configured successfully');
+          } else {
+            console.error('❌ Failed to configure resource:', result.error);
+          }
+        } catch (error) {
+          console.error('❌ Error configuring resource:', error);
+        }
+      } else {
+        console.warn('⚠️ No emission factor found for resource:', resourceId);
+        // For now, just update local state
+        setOrganizationResources(prev => ({
+          ...prev,
+          [resourceId]: !prev[resourceId]
+        }));
+      }
+    } else {
+      // TODO: Implement remove configuration
+      setOrganizationResources(prev => ({
+        ...prev,
+        [resourceId]: !prev[resourceId]
+      }));
+    }
   };
 
   // Handle facility resource assignment
-  const handleFacilityResourceToggle = (facilityId, resourceId) => {
-    setFacilityResources(prev => ({
-      ...prev,
-      [facilityId]: {
-        ...prev[facilityId],
-        [resourceId]: !prev[facilityId]?.[resourceId]
+  const handleFacilityResourceToggle = async (facilityId, resourceId) => {
+    const isCurrentlyAssigned = facilityResources[facilityId]?.[resourceId];
+    
+    if (!isCurrentlyAssigned) {
+      // Need to assign this resource - find the organization configuration for it
+      const orgConfig = organizationConfigurations.find(config => config.resource_id === resourceId);
+      
+      if (orgConfig) {
+        try {
+          const result = await assignResourceToFacility(facilityId, {
+            configurationId: orgConfig.configuration_id
+          });
+          
+          if (result.success) {
+            console.log('✅ Resource assigned to facility successfully');
+          } else {
+            console.error('❌ Failed to assign resource to facility:', result.error);
+          }
+        } catch (error) {
+          console.error('❌ Error assigning resource to facility:', error);
+        }
+      } else {
+        console.warn('⚠️ No organization configuration found for resource:', resourceId);
+        // For now, just update local state
+        setFacilityResources(prev => ({
+          ...prev,
+          [facilityId]: {
+            ...prev[facilityId],
+            [resourceId]: !prev[facilityId]?.[resourceId]
+          }
+        }));
       }
-    }));
+    } else {
+      // TODO: Implement remove assignment
+      setFacilityResources(prev => ({
+        ...prev,
+        [facilityId]: {
+          ...prev[facilityId],
+          [resourceId]: !prev[facilityId]?.[resourceId]
+        }
+      }));
+    }
   };
 
   // Helper function to get resource with emission factor
@@ -143,7 +240,7 @@ const Settings = () => {
 
 // Organization Tab Component
 const OrganizationTab = () => {
-  const { user } = useData();
+  const { user } = useUser();
   
   return (
     <div className="space-y-6">
@@ -206,9 +303,10 @@ const EmissionInventoryTab = ({
   emissionResources, 
   emissionFactorLibraries, 
   emissionFactors,
-  organizationResources, 
-  onResourceToggle
+  organizationResources,
+  onResourceToggle 
 }) => {
+  const { organizationConfigurations } = useEmission();
   const [activeScope, setActiveScope] = useState('scope1');
   const [activeCategory, setActiveCategory] = useState('stationary_combustion');
   const [showCementModal, setShowCementModal] = useState(false);
@@ -560,64 +658,97 @@ const EmissionInventoryTab = ({
             </p>
           </div>
 
-          {/* Resource List */}
-          <div className="space-y-3">
-            {(activeScope === 'scope1' ? scope1Categories[activeCategory] : scope2Categories[activeCategory])?.map((resource) => {
-              const emissionFactor = emissionFactors.find(ef => ef.resource_id === resource.id);
-              const library = emissionFactorLibraries.find(lib => lib.id === emissionFactor?.library_id);
-              const isSelected = organizationResources[resource.id];
+          {/* Resource Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Select
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Resource Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Resource Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Emission Factor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    EF Unit
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Heat Content
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    HC Unit
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Library
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Version
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {organizationConfigurations
+                  .filter(config => config.scope === activeScope && config.category === activeCategory)
+                  .map((config) => {
+                    const isSelected = true; // All configs here are selected by definition
 
-              return (
-                <label 
-                  key={resource.id} 
-                  className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                    isSelected 
-                      ? 'border-primary-500 bg-primary-50' 
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    checked={isSelected || false}
-                    onChange={() => onResourceToggle(resource.id)}
-                  />
-                  <div className="ml-4 flex-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{resource.resource_name}</div>
-                        <div className="text-xs text-gray-500 mt-1">{resource.description}</div>
-                      </div>
-                      <div className="text-right">
-                        {emissionFactor && (
-                          <div className="text-sm text-blue-600">
-                            {emissionFactor.emission_factor} {emissionFactor.emission_factor_unit}
-                          </div>
-                        )}
-                        {emissionFactor?.heat_content > 0 && (
-                          <div className="text-xs text-gray-500">
-                            {emissionFactor.heat_content} {emissionFactor.heat_content_unit}
-                          </div>
-                        )}
-                        {library && (
-                          <div className="text-xs text-gray-400 mt-1">
-                            {library.name} ({library.year})
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <CheckCircleIcon className="h-5 w-5 text-green-500 ml-2" />
-                  )}
-                </label>
-              );
-            }) || (
-              <div className="text-center py-8">
-                <BeakerIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500">No resources found for {getCategoryName(activeCategory)}</p>
-              </div>
-            )}
+                    return (
+                      <tr 
+                        key={config.configuration_id}
+                        className="hover:bg-gray-50 bg-blue-50"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                            checked={true}
+                            onChange={() => onResourceToggle(config.resource_id)}
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{config.resource_name}</div>
+                          <div className="text-xs text-gray-500">{config.description}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {config.type || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {config.emission_factor || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {config.emission_factor_unit || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {config.heat_content || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {config.heat_content_unit || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {config.library_name || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {config.library_year ? `${config.library_version} (${config.library_year})` : '-'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                {organizationConfigurations.filter(config => config.scope === activeScope && config.category === activeCategory).length === 0 && (
+                  <tr>
+                    <td colSpan="9" className="px-6 py-8 text-center">
+                      <BeakerIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-500">No resources configured for {getCategoryName(activeCategory)}</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -634,6 +765,7 @@ const FacilityAssignmentTab = ({
   onResourceToggle,
   getResourceWithFactor 
 }) => {
+  const { facilityAssignments } = useEmission();
   const selectedOrgResources = Object.keys(organizationResources).filter(id => organizationResources[id]);
   const availableResources = emissionResources.filter(r => selectedOrgResources.includes(r.id));
 
@@ -673,102 +805,99 @@ const FacilityAssignmentTab = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Scope 1 Resources */}
-                  <div>
-                    <h5 className="font-medium text-gray-900 mb-3 flex items-center">
-                      <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>
-                      Scope 1 Resources
-                    </h5>
-                    <div className="space-y-2">
-                      {availableResources
-                        .filter(resource => resource.scope === 'scope1')
-                        .map((resource) => {
-                          const resourceWithFactor = getResourceWithFactor(resource.id);
-                          const factor = resourceWithFactor.emissionFactor;
-                          const isAssigned = facilityResources[facility.id]?.[resource.id];
-                          
-                          return (
-                            <label 
-                              key={resource.id} 
-                              className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                                isAssigned 
-                                  ? 'border-primary-500 bg-primary-50' 
-                                  : 'border-gray-200 hover:bg-gray-50'
-                              }`}
-                            >
+                {/* Facility Resources Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Assign
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Resource Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Resource Type
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Scope
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Emission Factor
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          EF Unit
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Heat Content
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          HC Unit
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Library
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Version
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {(facilityAssignments[facility.id] || []).map((assignment) => {
+                        const isAssigned = true; // All items here are assigned by definition
+                        
+                        return (
+                          <tr 
+                            key={assignment.assignment_id}
+                            className="hover:bg-gray-50 bg-green-50"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
                               <input
                                 type="checkbox"
                                 className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                                checked={isAssigned || false}
-                                onChange={() => onResourceToggle(facility.id, resource.id)}
+                                checked={true}
+                                onChange={() => onResourceToggle(facility.id, assignment.resource_id)}
                               />
-                              <div className="ml-3 flex-1">
-                                <div className="text-sm font-medium text-gray-900">{resource.resource_name}</div>
-                                <div className="text-xs text-gray-500">{resource.category}</div>
-                                {factor && (
-                                  <div className="text-xs text-blue-600 mt-1">
-                                    {factor.emission_factor} {factor.emission_factor_unit}
-                                    {factor.heat_content > 0 && ` • ${factor.heat_content} ${factor.heat_content_unit}`}
-                                  </div>
-                                )}
-                              </div>
-                              {isAssigned && (
-                                <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                              )}
-                            </label>
-                          );
-                        })}
-                    </div>
-                  </div>
-
-                  {/* Scope 2 Resources */}
-                  <div>
-                    <h5 className="font-medium text-gray-900 mb-3 flex items-center">
-                      <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
-                      Scope 2 Resources
-                    </h5>
-                    <div className="space-y-2">
-                      {availableResources
-                        .filter(resource => resource.scope === 'scope2')
-                        .map((resource) => {
-                          const resourceWithFactor = getResourceWithFactor(resource.id);
-                          const factor = resourceWithFactor.emissionFactor;
-                          const isAssigned = facilityResources[facility.id]?.[resource.id];
-                          
-                          return (
-                            <label 
-                              key={resource.id} 
-                              className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                                isAssigned 
-                                  ? 'border-primary-500 bg-primary-50' 
-                                  : 'border-gray-200 hover:bg-gray-50'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                                checked={isAssigned || false}
-                                onChange={() => onResourceToggle(facility.id, resource.id)}
-                              />
-                              <div className="ml-3 flex-1">
-                                <div className="text-sm font-medium text-gray-900">{resource.resource_name}</div>
-                                <div className="text-xs text-gray-500">{resource.category}</div>
-                                {factor && (
-                                  <div className="text-xs text-blue-600 mt-1">
-                                    {factor.emission_factor} {factor.emission_factor_unit}
-                                    {factor.heat_content > 0 && ` • ${factor.heat_content} ${factor.heat_content_unit}`}
-                                  </div>
-                                )}
-                              </div>
-                              {isAssigned && (
-                                <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                              )}
-                            </label>
-                          );
-                        })}
-                    </div>
-                  </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{assignment.resource_name}</div>
+                              <div className="text-xs text-gray-500">{assignment.category}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {assignment.type || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                assignment.scope === 'scope1' 
+                                  ? 'bg-red-100 text-red-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {assignment.scope === 'scope1' ? 'Scope 1' : 'Scope 2'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {assignment.emission_factor || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {assignment.emission_factor_unit || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {assignment.heat_content || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {assignment.heat_content_unit || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {assignment.library_name || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {assignment.library_year ? `${assignment.library_version} (${assignment.library_year})` : '-'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-gray-200">

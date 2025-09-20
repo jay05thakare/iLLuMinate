@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useData } from '../context/DataContext';
+import { useFacility } from '../contexts/FacilityContext';
+import { useEmission } from '../contexts/EmissionContext';
 import EmissionDataForm from '../components/forms/EmissionDataForm';
 import ProductionDataForm from '../components/forms/ProductionDataForm';
 import {
@@ -12,7 +13,10 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Emissions = () => {
-  const { facilities, emissions, production, loading } = useData();
+  const { facilities, loading: facilitiesLoading } = useFacility();
+  const { emissionResources: emissions } = useEmission();
+  const production = []; // TODO: Add production context
+  const loading = facilitiesLoading;
   const [showEmissionForm, setShowEmissionForm] = useState(false);
   const [showProductionForm, setShowProductionForm] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState('');

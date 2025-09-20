@@ -32,13 +32,22 @@ help:
 	@echo "  build-backend   Build backend only"
 	@echo ""
 	@echo "Database Commands:"
-	@echo "  db-setup        Create database and user"
+	@echo "  db-setup        Setup database with Docker"
+	@echo "  db-start        Start database services (PostgreSQL, Redis)"
+	@echo "  db-stop         Stop database services"
+	@echo "  db-connect      Connect to PostgreSQL database"
+	@echo "  db-logs         Show PostgreSQL logs"
 	@echo "  migrate         Run database migrations"
 	@echo "  migrate-create  Create new migration file"
 	@echo "  migrate-status  Check migration status"
+	@echo "  migrate-history Show migration history"
 	@echo "  migrate-rollback Roll back last migration"
-	@echo "  db-reset        Reset database (drop and recreate)"
+	@echo "  db-reset        Reset database with JK Cement real data"
+	@echo "  db-reset-sample Reset database with sample data"
 	@echo "  db-seed         Seed database with sample data"
+	@echo "  db-backup       Create database backup"
+	@echo "  db-restore      Restore database from backup"
+	@echo "  pgadmin         Start PgAdmin web interface"
 	@echo ""
 	@echo "Utility Commands:"
 	@echo "  clean           Clean build artifacts"
@@ -151,9 +160,26 @@ build-backend:
 
 # Database Commands
 db-setup:
-	@echo "🗄️  Setting up database..."
-	@echo "This would typically create PostgreSQL database and user"
-	@echo "For development, ensure PostgreSQL is running and database exists"
+	@echo "🗄️  Setting up database with Docker..."
+	@docker-compose up -d postgres
+	@echo "Waiting for PostgreSQL to be ready..."
+	@sleep 5
+	@docker-compose exec postgres pg_isready -U illuminate -d illuminate_db
+	@echo "✅ Database setup completed!"
+
+db-start:
+	@echo "🚀 Starting database services..."
+	@docker-compose up -d postgres redis
+	@echo "✅ Database services started!"
+
+db-stop:
+	@echo "🛑 Stopping database services..."
+	@docker-compose stop postgres redis
+	@echo "✅ Database services stopped!"
+
+db-logs:
+	@echo "📋 Showing database logs..."
+	@docker-compose logs -f postgres
 
 migrate:
 	@echo "📊 Running database migrations..."
@@ -179,14 +205,56 @@ migrate-rollback:
 	@echo "🔄 Rolling back last migration..."
 	@cd backend && npm run migrate:rollback
 
+migrate-history:
+	@echo "📈 Showing migration history..."
+	@docker-compose exec postgres psql -U illuminate -d illuminate_db -c "SELECT filename, applied_at, execution_time_ms, success FROM migration_history ORDER BY applied_at;"
+
 db-reset:
-	@echo "🗑️  Resetting database..."
-	@echo "This would typically drop and recreate the database"
-	@echo "For development, ensure you have proper backup"
+	@echo "🗑️  Resetting database with JK Cement data..."
+	@docker-compose down -v postgres
+	@docker-compose up -d postgres
+	@echo "Waiting for PostgreSQL to be ready..."
+	@sleep 5
+	@cd backend && DB_PASSWORD=illuminate123 npm run migrate
+	@cd backend && DB_PASSWORD=illuminate123 npm run db:reset
+	@echo "✅ Database reset with JK Cement data completed!"
+
+db-reset-sample:
+	@echo "🗑️  Resetting database with sample data..."
+	@docker-compose down -v postgres
+	@docker-compose up -d postgres
+	@echo "Waiting for PostgreSQL to be ready..."
+	@sleep 5
+	@cd backend && DB_PASSWORD=illuminate123 npm run migrate
+	@cd backend && DB_PASSWORD=illuminate123 npm run seed
+	@echo "✅ Database reset with sample data completed!"
 
 db-seed:
 	@echo "🌱 Seeding database with sample data..."
 	@cd backend && npm run seed
+
+db-connect:
+	@echo "🔗 Connecting to database..."
+	@docker-compose exec postgres psql -U illuminate -d illuminate_db
+
+db-backup:
+	@echo "💾 Creating database backup..."
+	@mkdir -p backups
+	@docker-compose exec postgres pg_dump -U illuminate illuminate_db > backups/illuminate_backup_$$(date +%Y%m%d_%H%M%S).sql
+	@echo "✅ Backup created in backups/ directory"
+
+db-restore:
+	@echo "📥 Restoring database from backup..."
+	@read -p "Enter backup filename (from backups/ directory): " filename; \
+	docker-compose exec -T postgres psql -U illuminate -d illuminate_db < "backups/$$filename"
+	@echo "✅ Database restored!"
+
+pgadmin:
+	@echo "🔧 Starting PgAdmin..."
+	@docker-compose up -d pgadmin
+	@echo "✅ PgAdmin available at http://localhost:8080"
+	@echo "   Email: admin@illuminate.com"
+	@echo "   Password: admin123"
 
 # Utility Commands
 clean:

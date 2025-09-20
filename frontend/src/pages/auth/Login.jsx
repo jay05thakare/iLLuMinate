@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: 'admin@greencement.com', // Pre-fill for demo
-    password: 'password123'
+    email: 'sustainability@jkcement.com', // Pre-fill for demo
+    password: 'jkcement2024'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -26,21 +26,35 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🚀 Login form submitted');
+    console.log('📝 Form data:', { email: formData.email, passwordLength: formData.password?.length });
+    
     setLoading(true);
     setError('');
 
     try {
+      console.log('🔐 Calling auth context login...');
       const result = await login(formData.email, formData.password);
+      console.log('📥 Login result:', result);
       
       if (result.success) {
+        console.log('✅ Login successful, navigating to dashboard...');
         navigate('/dashboard');
       } else {
+        console.log('❌ Login failed with result:', result);
         setError(result.error || 'Login failed');
       }
     } catch (err) {
+      console.error('❌ Login form caught exception:', err);
+      console.error('Exception details:', {
+        message: err.message,
+        name: err.name,
+        stack: err.stack
+      });
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
+      console.log('🏁 Login form process completed');
     }
   };
 
@@ -58,9 +72,9 @@ const Login = () => {
       {/* Demo credentials info */}
       <div className="bg-primary-50 border border-primary-200 rounded-md p-4">
         <div className="text-sm text-primary-800">
-          <p className="font-medium">Demo Credentials:</p>
-          <p>Email: admin@greencement.com</p>
-          <p>Password: Any password (demo mode)</p>
+          <p className="font-medium">JK Cement Demo Credentials:</p>
+          <p>Email: sustainability@jkcement.com</p>
+          <p>Password: jkcement2024</p>
         </div>
       </div>
 

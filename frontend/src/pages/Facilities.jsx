@@ -1,14 +1,23 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useData } from '../context/DataContext';
+import { useFacility } from '../contexts/FacilityContext';
+import { useNotification } from '../contexts/NotificationContext';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { BuildingOfficeIcon, PlusIcon, PencilIcon } from '@heroicons/react/24/outline';
 import FacilityModal from '../components/modals/FacilityModal';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { TableSkeleton } from '../components/ui/LoadingSkeleton';
+import ErrorAlert, { NetworkErrorAlert, DataNotFoundAlert } from '../components/ui/ErrorAlert';
 
 const Facilities = () => {
-  const { facilities, loading } = useData();
+  const { facilities, loading, createFacility, updateFacility, error, fetchFacilities } = useFacility();
+  const { showSuccess, showError } = useNotification();
+  const { handleError, clearError } = useErrorHandler();
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState(null);
   const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handle opening modal for adding new facility
   const handleAddFacility = () => {
@@ -34,26 +43,94 @@ const Facilities = () => {
 
   // Handle saving facility (both add and edit)
   const handleSaveFacility = async (facilityData) => {
-    // TODO: Implement actual save logic
-    // For now, just log the data
-    console.log('Saving facility:', facilityData);
+    setIsSubmitting(true);
+    clearError(); // Clear any previous errors
     
-    // In a real app, you would:
-    // 1. Call API to save the facility
-    // 2. Update the facilities list in context/state
-    // 3. Show success message
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Close modal
-    handleModalClose();
+    try {
+      let result;
+      
+      if (modalMode === 'add') {
+        result = await createFacility(facilityData);
+      } else {
+        result = await updateFacility(selectedFacility.id, facilityData);
+      }
+      
+      if (result.success) {
+        showSuccess(
+          `Facility ${modalMode === 'add' ? 'created' : 'updated'} successfully`,
+          { title: modalMode === 'add' ? 'Facility Created' : 'Facility Updated' }
+        );
+        handleModalClose();
+      } else {
+        handleError(new Error(result.error || `Failed to ${modalMode} facility`));
+      }
+    } catch (error) {
+      handleError(error, { 
+        context: `${modalMode === 'add' ? 'Creating' : 'Updating'} facility`,
+        facilityData 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="loading-spinner h-8 w-8"></div>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Facilities</h1>
+        </div>
+        <TableSkeleton rows={5} />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Facilities</h1>
+          <button
+            onClick={handleAddFacility}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Add Facility
+          </button>
+        </div>
+        
+        <ErrorAlert
+          type="error"
+          title="Failed to Load Facilities"
+          message={error}
+          onRetry={() => fetchFacilities()}
+          onClose={clearError}
+        />
+      </div>
+    );
+  }
+
+  // No data state
+  if (!facilities || facilities.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Facilities</h1>
+          <button
+            onClick={handleAddFacility}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Add Facility
+          </button>
+        </div>
+        
+        <DataNotFoundAlert
+          resource="facilities"
+          onRetry={() => fetchFacilities()}
+        />
       </div>
     );
   }
@@ -126,6 +203,7 @@ const Facilities = () => {
         onSave={handleSaveFacility}
         facility={selectedFacility}
         mode={modalMode}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

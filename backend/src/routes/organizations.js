@@ -1,34 +1,105 @@
 const express = require('express');
-const { successResponse } = require('../middleware/errorHandler');
-
+const Joi = require('joi');
 const router = express.Router();
+const organizationController = require('../controllers/organizationController');
+const { authenticateToken, requireSameOrganization } = require('../middleware/authMiddleware');
+const { validate, schemas } = require('../middleware/validationMiddleware');
 
 /**
- * Organization routes placeholder
- * These will be implemented in later phases
+ * Organization Routes
+ * Handles organization management operations
  */
 
 /**
- * Get organizations
- * GET /api/organizations
+ * @route   GET /api/organizations/:id
+ * @desc    Get organization details
+ * @access  Private (Organization members only)
  */
-router.get('/', (req, res) => {
-  res.json(successResponse(
-    { message: 'Organizations list endpoint - Coming in Phase 2' },
-    'Endpoint placeholder'
-  ));
-});
+router.get('/:id', 
+  authenticateToken,
+  validate(schemas.uuidParam),
+  requireSameOrganization,
+  organizationController.getOrganization
+);
 
 /**
- * Create organization
- * POST /api/organizations
+ * @route   PUT /api/organizations/:id
+ * @desc    Update organization details
+ * @access  Private (Admin only)
  */
-router.post('/', (req, res) => {
-  res.json(successResponse(
-    { message: 'Create organization endpoint - Coming in Phase 2' },
-    'Endpoint placeholder'
-  ));
-});
+router.put('/:id', 
+  authenticateToken,
+  validate({
+    params: schemas.uuidParam.params,
+    body: schemas.updateOrganization.body
+  }),
+  requireSameOrganization,
+  organizationController.updateOrganization
+);
+
+/**
+ * @route   GET /api/organizations/:id/stats
+ * @desc    Get organization statistics
+ * @access  Private (Organization members only)
+ */
+router.get('/:id/stats', 
+  authenticateToken,
+  validate(schemas.uuidParam),
+  requireSameOrganization,
+  organizationController.getOrganizationStats
+);
+
+/**
+ * @route   GET /api/organizations/:id/users
+ * @desc    Get organization users
+ * @access  Private (Organization members only)
+ */
+router.get('/:id/users', 
+  authenticateToken,
+  validate({
+    params: schemas.uuidParam.params,
+    query: schemas.pagination.query.keys({
+      role: Joi.string().valid('admin', 'user').optional(),
+      status: Joi.string().valid('active', 'inactive', 'pending').optional()
+    })
+  }),
+  requireSameOrganization,
+  organizationController.getOrganizationUsers
+);
+
+/**
+ * @route   GET /api/organizations/:id/emissions/analytics
+ * @desc    Get organization emission analytics
+ * @access  Private (Organization members only)
+ */
+router.get('/:id/emissions/analytics',
+  authenticateToken,
+  validate({
+    params: schemas.uuidParam.params,
+    query: Joi.object({
+      year: Joi.number().integer().min(2000).max(2100).default(new Date().getFullYear()),
+      period: Joi.string().valid('monthly', 'quarterly', 'yearly').default('monthly')
+    })
+  }),
+  requireSameOrganization,
+  organizationController.getOrganizationEmissionAnalytics
+);
+
+/**
+ * @route   GET /api/organizations/:id/dashboard
+ * @desc    Get organization dashboard summary
+ * @access  Private (Organization members only)
+ */
+router.get('/:id/dashboard',
+  authenticateToken,
+  validate({
+    params: schemas.uuidParam.params,
+    query: Joi.object({
+      year: Joi.number().integer().min(2000).max(2100).default(new Date().getFullYear())
+    })
+  }),
+  requireSameOrganization,
+  organizationController.getOrganizationDashboard
+);
 
 module.exports = router;
-

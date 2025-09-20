@@ -5,15 +5,22 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
+import { useNotification } from '../../contexts/NotificationContext';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import apiService from '../../services/api';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 const ProductionDataForm = ({ facilityId, onClose, onSubmit }) => {
+  const { showSuccess, showError } = useNotification();
+  const { handleError, clearError } = useErrorHandler();
+  
   const [formData, setFormData] = useState({
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
-    cement_production: '',
+    cementProduction: '',
     unit: 'tonnes',
-    clinker_production: '',
-    alternative_fuels_percentage: '',
+    clinkerProduction: '',
+    alternativeFuelsPercentage: '',
     notes: '',
   });
   const [errors, setErrors] = useState({});
@@ -40,18 +47,18 @@ const ProductionDataForm = ({ facilityId, onClose, onSubmit }) => {
       newErrors.year = 'Please enter a valid year';
     }
 
-    if (!formData.cement_production || parseFloat(formData.cement_production) <= 0) {
-      newErrors.cement_production = 'Please enter a valid production amount';
+    if (!formData.cementProduction || parseFloat(formData.cementProduction) <= 0) {
+      newErrors.cementProduction = 'Please enter a valid production amount';
     }
 
-    if (formData.clinker_production && parseFloat(formData.clinker_production) < 0) {
-      newErrors.clinker_production = 'Clinker production cannot be negative';
+    if (formData.clinkerProduction && parseFloat(formData.clinkerProduction) < 0) {
+      newErrors.clinkerProduction = 'Clinker production cannot be negative';
     }
 
-    if (formData.alternative_fuels_percentage && 
-        (parseFloat(formData.alternative_fuels_percentage) < 0 || 
-         parseFloat(formData.alternative_fuels_percentage) > 100)) {
-      newErrors.alternative_fuels_percentage = 'Percentage must be between 0 and 100';
+    if (formData.alternativeFuelsPercentage && 
+        (parseFloat(formData.alternativeFuelsPercentage) < 0 || 
+         parseFloat(formData.alternativeFuelsPercentage) > 100)) {
+      newErrors.alternativeFuelsPercentage = 'Percentage must be between 0 and 100';
     }
 
     setErrors(newErrors);
@@ -64,29 +71,46 @@ const ProductionDataForm = ({ facilityId, onClose, onSubmit }) => {
     if (!validateForm()) return;
 
     setLoading(true);
+    clearError(); // Clear any previous errors
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newEntry = {
-        id: `production-${Date.now()}`,
-        facility_id: facilityId,
+      const productionData = {
+        facilityId,
         month: parseInt(formData.month),
         year: parseInt(formData.year),
-        cement_production: parseFloat(formData.cement_production),
+        cementProduction: parseFloat(formData.cementProduction),
         unit: formData.unit,
-        clinker_production: formData.clinker_production ? parseFloat(formData.clinker_production) : null,
-        alternative_fuels_percentage: formData.alternative_fuels_percentage ? 
-          parseFloat(formData.alternative_fuels_percentage) : null,
-        notes: formData.notes,
-        created_at: new Date().toISOString(),
+        clinkerProduction: formData.clinkerProduction ? parseFloat(formData.clinkerProduction) : null,
+        alternativeFuelsPercentage: formData.alternativeFuelsPercentage ? 
+          parseFloat(formData.alternativeFuelsPercentage) : null,
+        notes: formData.notes || null,
       };
 
-      onSubmit?.(newEntry);
-      onClose?.();
+      const response = await apiService.createProductionData(productionData);
+      
+      if (response.success) {
+        showSuccess(
+          'Production data saved successfully',
+          { title: 'Data Saved' }
+        );
+        onSubmit?.(response.data);
+        onClose?.();
+      } else {
+        throw new Error(response.message || 'Failed to save production data');
+      }
     } catch (error) {
-      setErrors({ submit: 'Failed to save production data. Please try again.' });
+      handleError(error, { 
+        context: 'Creating production data',
+        facilityId,
+        period: `${formData.year}-${formData.month}`
+      });
+      
+      // If it's a validation error from the backend, show specific field errors
+      if (error.response?.status === 409) {
+        setErrors({ submit: 'Production data already exists for this period.' });
+      } else if (error.response?.status === 422) {
+        setErrors({ submit: 'Please check your input data.' });
+      }
     } finally {
       setLoading(false);
     }
@@ -180,15 +204,15 @@ const ProductionDataForm = ({ facilityId, onClose, onSubmit }) => {
               <div>
                 <input
                   type="number"
-                  name="cement_production"
-                  value={formData.cement_production}
+                  name="cementProduction"
+                  value={formData.cementProduction}
                   onChange={handleChange}
                   step="0.01"
                   min="0"
                   className="form-input"
                   placeholder="Amount"
                 />
-                {errors.cement_production && <p className="form-error">{errors.cement_production}</p>}
+                {errors.cementProduction && <p className="form-error">{errors.cementProduction}</p>}
               </div>
               <div>
                 <select
@@ -213,15 +237,15 @@ const ProductionDataForm = ({ facilityId, onClose, onSubmit }) => {
             </label>
             <input
               type="number"
-              name="clinker_production"
-              value={formData.clinker_production}
+              name="clinkerProduction"
+              value={formData.clinkerProduction}
               onChange={handleChange}
               step="0.01"
               min="0"
               className="form-input"
               placeholder="Clinker production in tonnes"
             />
-            {errors.clinker_production && <p className="form-error">{errors.clinker_production}</p>}
+            {errors.clinkerProduction && <p className="form-error">{errors.clinkerProduction}</p>}
           </div>
 
           {/* Alternative Fuels Percentage */}
@@ -233,8 +257,8 @@ const ProductionDataForm = ({ facilityId, onClose, onSubmit }) => {
             <div className="relative">
               <input
                 type="number"
-                name="alternative_fuels_percentage"
-                value={formData.alternative_fuels_percentage}
+                name="alternativeFuelsPercentage"
+                value={formData.alternativeFuelsPercentage}
                 onChange={handleChange}
                 step="0.1"
                 min="0"
@@ -244,8 +268,8 @@ const ProductionDataForm = ({ facilityId, onClose, onSubmit }) => {
               />
               <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
             </div>
-            {errors.alternative_fuels_percentage && (
-              <p className="form-error">{errors.alternative_fuels_percentage}</p>
+            {errors.alternativeFuelsPercentage && (
+              <p className="form-error">{errors.alternativeFuelsPercentage}</p>
             )}
           </div>
 
@@ -313,8 +337,8 @@ const ProductionDataForm = ({ facilityId, onClose, onSubmit }) => {
             >
               {loading ? (
                 <>
-                  <div className="loading-spinner h-4 w-4 mr-2"></div>
-                  Saving...
+                  <LoadingSpinner size="sm" variant="white" />
+                  <span className="ml-2">Saving...</span>
                 </>
               ) : (
                 'Save Data'

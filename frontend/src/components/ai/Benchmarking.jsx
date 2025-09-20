@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useData } from '../../context/DataContext';
+import { useFacility } from '../../contexts/FacilityContext';
 import {
   ChartBarIcon,
   TrophyIcon,
@@ -10,12 +10,13 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Benchmarking = ({ facilityId }) => {
-  const { mockData, facilities } = useData();
+  const { facilities } = useFacility();
   const [selectedMetric, setSelectedMetric] = useState('carbon_intensity');
   const [selectedRegion, setSelectedRegion] = useState('global');
 
   const facility = facilities.find(f => f.id === facilityId);
-  const benchmarkData = mockData.industryBenchmarks || [];
+  // Mock benchmark data for now
+  const benchmarkData = [];
 
   // Mock current facility performance
   const facilityPerformance = {

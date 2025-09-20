@@ -11,9 +11,14 @@ const { connectDatabase } = require('./config/database');
 // Import route modules
 const authRoutes = require('./routes/auth');
 const organizationRoutes = require('./routes/organizations');
+const userRoutes = require('./routes/users');
 const facilityRoutes = require('./routes/facilities');
 const emissionRoutes = require('./routes/emissions');
-const userRoutes = require('./routes/users');
+const productionRoutes = require('./routes/production');
+const aggregationRoutes = require('./routes/aggregation');
+const analyticsRoutes = require('./routes/analytics');
+const targetsRoutes = require('./routes/targets');
+const benchmarkingRoutes = require('./routes/benchmarking');
 const healthRoutes = require('./routes/health');
 
 /**
@@ -43,18 +48,20 @@ const createApp = () => {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
   }));
 
-  // Rate limiting
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: {
-      error: 'Too many requests from this IP, please try again later.',
-      retryAfter: '15 minutes'
-    },
-    standardHeaders: true,
-    legacyHeaders: false
-  });
-  app.use('/api', limiter);
+  // Rate limiting - temporarily disabled for development
+  if (config.nodeEnv === 'production') {
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // Limit each IP to 100 requests per windowMs
+      message: {
+        error: 'Too many requests from this IP, please try again later.',
+        retryAfter: '15 minutes'
+      },
+      standardHeaders: true,
+      legacyHeaders: false
+    });
+    app.use('/api', limiter);
+  }
 
   // Body parsing middleware
   app.use(express.json({ limit: '10mb' }));
@@ -75,9 +82,14 @@ const createApp = () => {
   // API routes
   app.use('/api/auth', authRoutes);
   app.use('/api/organizations', organizationRoutes);
+  app.use('/api/users', userRoutes);
   app.use('/api/facilities', facilityRoutes);
   app.use('/api/emissions', emissionRoutes);
-  app.use('/api/users', userRoutes);
+  app.use('/api/production', productionRoutes);
+  app.use('/api/aggregation', aggregationRoutes);
+  app.use('/api/analytics', analyticsRoutes);
+  app.use('/api/targets', targetsRoutes);
+  app.use('/api/benchmarking', benchmarkingRoutes);
 
   // Root endpoint
   app.get('/', (req, res) => {
@@ -102,11 +114,9 @@ const createApp = () => {
  */
 const startServer = async () => {
   try {
-    // Skip database connection for Phase 1 development
-    // TODO: Enable database connection in Phase 3
-    // await connectDatabase();
-    // logger.info('Database connection established');
-    logger.info('Skipping database connection for Phase 1 development');
+    // Connect to database for Phase 3
+    await connectDatabase();
+    logger.info('Database connection established');
 
     // Create app
     const app = createApp();

@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useData } from '../context/DataContext';
+import { useState, useEffect } from 'react';
+import { useFacility } from '../contexts/FacilityContext';
+import apiService from '../services/api';
 import {
   PlusIcon,
   ChartBarIcon,
@@ -19,7 +20,9 @@ import CreateTargetModal from '../components/modals/CreateTargetModal';
 import TargetDetailModal from '../components/modals/TargetDetailModal';
 
 const Targets = () => {
-  const { targets, facilities, loading } = useData();
+  const { facilities, loading } = useFacility();
+  const [targets, setTargets] = useState([]);
+  const [targetsLoading, setTargetsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   
   const [selectedFacility, setSelectedFacility] = useState('all');
@@ -29,6 +32,33 @@ const Targets = () => {
   const [selectedTargetDetail, setSelectedTargetDetail] = useState(null);
   const [isTargetDetailModalOpen, setIsTargetDetailModalOpen] = useState(false);
 
+  // Fetch targets from API
+  useEffect(() => {
+    const fetchTargets = async () => {
+      try {
+        setTargetsLoading(true);
+        console.log('🎯 Fetching targets from API...');
+        
+        const response = await apiService.getTargets();
+        console.log('🎯 Targets API response:', response);
+        
+        if (response.success) {
+          setTargets(response.data.targets || []);
+          console.log('🎯 Targets loaded:', response.data.targets?.length || 0);
+        } else {
+          console.error('🎯 Failed to fetch targets:', response.message);
+          setTargets([]);
+        }
+      } catch (error) {
+        console.error('🎯 Error fetching targets:', error);
+        setTargets([]);
+      } finally {
+        setTargetsLoading(false);
+      }
+    };
+
+    fetchTargets();
+  }, []);
 
   const handleViewTargetDetail = (target) => {
     setSelectedTargetDetail(target);
@@ -71,34 +101,34 @@ const Targets = () => {
   };
 
   function calculateProgress(target) {
-    // Safety checks for required fields
-    if (!target || typeof target.baseline_value !== 'number' || typeof target.target_value !== 'number' || 
-        typeof target.baseline_year !== 'number' || typeof target.target_year !== 'number') {
+    // Safety checks for required fields - using camelCase from API
+    if (!target || typeof target.baselineValue !== 'number' || typeof target.targetValue !== 'number' || 
+        typeof target.baselineYear !== 'number' || typeof target.targetYear !== 'number') {
       console.warn('Target missing required numeric fields:', target);
       return 0;
     }
 
     const currentYear = new Date().getFullYear();
-    const totalYears = target.target_year - target.baseline_year;
-    const elapsedYears = currentYear - target.baseline_year;
+    const totalYears = target.targetYear - target.baselineYear;
+    const elapsedYears = currentYear - target.baselineYear;
     
     // Avoid division by zero
     if (totalYears <= 0) {
-      return target.baseline_year <= currentYear ? 100 : 0;
+      return target.baselineYear <= currentYear ? 100 : 0;
     }
     
     const timeProgress = Math.min(Math.max((elapsedYears / totalYears) * 100, 0), 100);
     
     // Mock progress calculation - in real app this would use actual data
-    const valueChange = target.baseline_value - target.target_value;
+    const valueChange = target.baselineValue - target.targetValue;
     
     // Avoid division by zero
     if (Math.abs(valueChange) < 0.001) {
       return timeProgress; // If target equals baseline, use time-based progress
     }
     
-    const mockCurrentValue = target.baseline_value - (valueChange * (timeProgress / 100) * 0.7);
-    const actualChange = target.baseline_value - mockCurrentValue;
+    const mockCurrentValue = target.baselineValue - (valueChange * (timeProgress / 100) * 0.7);
+    const actualChange = target.baselineValue - mockCurrentValue;
     const valueProgress = Math.abs(actualChange / valueChange) * 100;
     
     return Math.min(Math.max(valueProgress, 0), 100);
@@ -310,33 +340,33 @@ const Targets = () => {
 // Overview Tab Component
 const OverviewTab = ({ stats, targets, facilities, onCreateTarget, onViewTargetDetail }) => {
   function calculateProgress(target) {
-    // Safety checks for required fields
-    if (!target || typeof target.baseline_value !== 'number' || typeof target.target_value !== 'number' || 
-        typeof target.baseline_year !== 'number' || typeof target.target_year !== 'number') {
+    // Safety checks for required fields - using camelCase from API
+    if (!target || typeof target.baselineValue !== 'number' || typeof target.targetValue !== 'number' || 
+        typeof target.baselineYear !== 'number' || typeof target.targetYear !== 'number') {
       return 0;
     }
 
     const currentYear = new Date().getFullYear();
-    const totalYears = target.target_year - target.baseline_year;
-    const elapsedYears = currentYear - target.baseline_year;
+    const totalYears = target.targetYear - target.baselineYear;
+    const elapsedYears = currentYear - target.baselineYear;
     
     // Avoid division by zero
     if (totalYears <= 0) {
-      return target.baseline_year <= currentYear ? 100 : 0;
+      return target.baselineYear <= currentYear ? 100 : 0;
     }
     
     const timeProgress = Math.min(Math.max((elapsedYears / totalYears) * 100, 0), 100);
     
     // Mock progress calculation
-    const valueChange = target.baseline_value - target.target_value;
+    const valueChange = target.baselineValue - target.targetValue;
     
     // Avoid division by zero
     if (Math.abs(valueChange) < 0.001) {
       return timeProgress;
     }
     
-    const mockCurrentValue = target.baseline_value - (valueChange * (timeProgress / 100) * 0.7);
-    const actualChange = target.baseline_value - mockCurrentValue;
+    const mockCurrentValue = target.baselineValue - (valueChange * (timeProgress / 100) * 0.7);
+    const actualChange = target.baselineValue - mockCurrentValue;
     const valueProgress = Math.abs(actualChange / valueChange) * 100;
     
     return Math.min(Math.max(valueProgress, 0), 100);
@@ -432,14 +462,14 @@ const OverviewTab = ({ stats, targets, facilities, onCreateTarget, onViewTargetD
                   <div>
                     <span className="text-gray-500">Baseline</span>
                     <div className="font-medium">
-                      {typeof target.baseline_value === 'number' ? target.baseline_value.toLocaleString() : 'N/A'} {target.unit || ''}
+                      {typeof target.baselineValue === 'number' ? target.baselineValue.toLocaleString() : 'N/A'} {target.unit || ''}
                     </div>
                   </div>
                   <div>
                     <span className="text-gray-500">Current (Est.)</span>
                     <div className="font-medium">
-                      {typeof target.baseline_value === 'number' && typeof target.target_value === 'number' 
-                        ? (target.baseline_value - ((target.baseline_value - target.target_value) * (progress / 100))).toFixed(1)
+                      {typeof target.baselineValue === 'number' && typeof target.targetValue === 'number' 
+                        ? (target.baselineValue - ((target.baselineValue - target.targetValue) * (progress / 100))).toFixed(1)
                         : 'N/A'
                       } {target.unit || ''}
                     </div>
@@ -447,7 +477,7 @@ const OverviewTab = ({ stats, targets, facilities, onCreateTarget, onViewTargetD
                   <div>
                     <span className="text-gray-500">Target</span>
                     <div className="font-medium">
-                      {typeof target.target_value === 'number' ? target.target_value.toLocaleString() : 'N/A'} {target.unit || ''}
+                      {typeof target.targetValue === 'number' ? target.targetValue.toLocaleString() : 'N/A'} {target.unit || ''}
                     </div>
                   </div>
                 </div>

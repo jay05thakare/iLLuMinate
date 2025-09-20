@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   HomeIcon,
   BuildingOfficeIcon,
@@ -197,9 +197,9 @@ const DashboardLayout = ({ children }) => {
                   <UserCircleIcon className="h-8 w-8 text-gray-400" />
                   <div className="hidden lg:flex lg:flex-col lg:text-sm lg:leading-5">
                     <span className="font-medium text-gray-900">
-                      {user?.first_name} {user?.last_name}
+                      {user?.firstName} {user?.lastName}
                     </span>
-                    <span className="text-gray-500">{user?.organization?.name}</span>
+                    <span className="text-gray-500">{user?.organizationName}</span>
                   </div>
                   <button
                     onClick={handleLogout}

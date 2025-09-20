@@ -1,48 +1,74 @@
 const express = require('express');
-const { successResponse } = require('../middleware/errorHandler');
-
 const router = express.Router();
+const authController = require('../controllers/authController');
+const { authenticateToken } = require('../middleware/authMiddleware');
+const { validate, schemas } = require('../middleware/validationMiddleware');
 
 /**
- * Authentication routes placeholder
- * These will be implemented in later phases
+ * Authentication Routes
+ * Handles user authentication and profile management
  */
 
 /**
- * Login endpoint
- * POST /api/auth/login
+ * @route   POST /api/auth/login
+ * @desc    Login user
+ * @access  Public
  */
-router.post('/login', (req, res) => {
-  // Placeholder implementation
-  res.json(successResponse(
-    { message: 'Auth login endpoint - Coming in Phase 2' },
-    'Endpoint placeholder'
-  ));
-});
+router.post('/login', 
+  validate(schemas.login),
+  authController.login
+);
 
 /**
- * Register endpoint
- * POST /api/auth/register
+ * @route   GET /api/auth/profile
+ * @desc    Get current user profile
+ * @access  Private
  */
-router.post('/register', (req, res) => {
-  // Placeholder implementation
-  res.json(successResponse(
-    { message: 'Auth register endpoint - Coming in Phase 2' },
-    'Endpoint placeholder'
-  ));
-});
+router.get('/profile', 
+  authenticateToken,
+  authController.getProfile
+);
 
 /**
- * Logout endpoint
- * POST /api/auth/logout
+ * @route   PUT /api/auth/profile
+ * @desc    Update user profile
+ * @access  Private
  */
-router.post('/logout', (req, res) => {
-  // Placeholder implementation
-  res.json(successResponse(
-    { message: 'Auth logout endpoint - Coming in Phase 2' },
-    'Endpoint placeholder'
-  ));
-});
+router.put('/profile', 
+  authenticateToken,
+  validate(schemas.updateProfile),
+  authController.updateProfile
+);
+
+/**
+ * @route   PUT /api/auth/password
+ * @desc    Change user password
+ * @access  Private
+ */
+router.put('/password', 
+  authenticateToken,
+  validate(schemas.changePassword),
+  authController.changePassword
+);
+
+/**
+ * @route   POST /api/auth/refresh
+ * @desc    Refresh JWT token
+ * @access  Private
+ */
+router.post('/refresh', 
+  authenticateToken,
+  authController.refreshToken
+);
+
+/**
+ * @route   POST /api/auth/logout
+ * @desc    Logout user
+ * @access  Private
+ */
+router.post('/logout', 
+  authenticateToken,
+  authController.logout
+);
 
 module.exports = router;
-

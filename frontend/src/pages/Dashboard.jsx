@@ -1,6 +1,11 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useData } from '../context/DataContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useDashboardData } from '../hooks/useData';
+import { useOrganization } from '../contexts/OrganizationContext';
+import { useFacility } from '../contexts/FacilityContext';
+import { useEmission } from '../contexts/EmissionContext';
+import { formatNumber, transformOrganizationData } from '../utils/dataTransformers';
+import { calculateTrend } from '../utils/calculations';
 import {
   BuildingOfficeIcon,
   ClipboardDocumentListIcon,
@@ -30,11 +35,37 @@ const chartColors = {
 };
 
 const Dashboard = () => {
+  console.log('🏠 Dashboard component rendering...');
+  
   const { user } = useAuth();
-  const { dashboardSummary, facilities, emissions, production, loading } = useData();
+  console.log('👤 User from auth:', user);
+  
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [chartTimePeriod, setChartTimePeriod] = useState('monthly');
   const [selectedFacility, setSelectedFacility] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('12months');
+  
+  console.log('📅 Selected year:', selectedYear);
+  
+  const { metrics, loading: dashboardLoading, refreshDashboard, dashboardData, analyticsData } = useDashboardData(selectedYear);
+  console.log('📊 Dashboard data hook results:', {
+    metrics,
+    loading: dashboardLoading,
+    dashboardData,
+    analyticsData
+  });
+  
+  const { organization, stats } = useOrganization();
+  console.log('🏢 Organization context:', { organization, stats });
+  
+  const { facilities } = useFacility();
+  console.log('🏭 Facilities context:', facilities);
+  
+  const { resources } = useEmission();
+  console.log('⚡ Resources context:', resources);
+
+  const loading = dashboardLoading;
+  console.log('⏳ Final loading state:', loading);
 
   if (loading) {
     return (
@@ -44,89 +75,75 @@ const Dashboard = () => {
     );
   }
 
-  // Generate mock chart data for trend analysis
-  const generateChartData = (dataType) => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    return months.map((month, index) => {
-      let baseValue;
-      switch (dataType) {
-        case 'scope1':
-          baseValue = 120000 + (Math.random() * 30000);
-          break;
-        case 'scope2':
-          baseValue = 45000 + (Math.random() * 15000);
-          break;
-        case 'production':
-          baseValue = 85000 + (Math.random() * 25000);
-          break;
-        case 'intensity':
-          baseValue = 820 + (Math.random() * 80);
-          break;
-        default:
-          baseValue = 165000 + (Math.random() * 40000);
-      }
-      return {
-        month,
-        value: Math.round(baseValue)
-      };
-    });
+  // Get real chart data from API
+  const totalEmissionsData = metrics.monthlyEmissions || [];
+  const scope1Data = metrics.scopeBreakdown?.scope1 || [];
+  const scope2Data = metrics.scopeBreakdown?.scope2 || [];
+  const productionData = metrics.monthlyProduction || [];
+  const intensityData = metrics.monthlyIntensity || [];
+
+  // Get trends from API
+  const emissionsTrend = {
+    value: metrics.trends?.emissions?.value || 0,
+    isPositive: metrics.trends?.emissions?.direction === 'increasing',
+    isImprovement: metrics.trends?.emissions?.direction === 'decreasing' // For emissions, decrease is improvement
+  };
+  
+  const productionTrend = {
+    value: metrics.trends?.production?.value || 0,
+    isPositive: metrics.trends?.production?.direction === 'increasing',
+    isImprovement: metrics.trends?.production?.direction === 'increasing' // For production, increase is improvement
+  };
+  
+  const intensityTrend = {
+    value: metrics.trends?.carbonIntensity?.value || 0,
+    isPositive: metrics.trends?.carbonIntensity?.direction === 'increasing',
+    isImprovement: metrics.trends?.carbonIntensity?.direction === 'decreasing' // For intensity, decrease is improvement
   };
 
-  // Calculate trends for key metrics
-  const calculateTrend = (data) => {
-    const recent = data.slice(-3).reduce((sum, d) => sum + d.value, 0) / 3;
-    const previous = data.slice(-6, -3).reduce((sum, d) => sum + d.value, 0) / 3;
-    const change = ((recent - previous) / previous) * 100;
-    return {
-      value: Math.abs(change).toFixed(1),
-      isPositive: change > 0,
-      isImprovement: change < 0 // For emissions, decrease is improvement
-    };
-  };
+  // Add detailed debugging for dashboard stats
+  console.log('📈 Dashboard metrics for stats:', {
+    totalFacilities: metrics.totalFacilities,
+    activeTargets: metrics.activeTargets,
+    totalEmissions: metrics.totalEmissions,
+    totalProduction: metrics.totalProduction,
+    fullMetrics: metrics
+  });
 
-  const totalEmissionsData = generateChartData('total');
-  const scope1Data = generateChartData('scope1');
-  const scope2Data = generateChartData('scope2');
-  const productionData = generateChartData('production');
-  const intensityData = generateChartData('intensity');
-
-  const emissionsTrend = calculateTrend(totalEmissionsData);
-  const productionTrend = calculateTrend(productionData);
-  const intensityTrend = calculateTrend(intensityData);
-
-  const stats = [
+  const dashboardStats = [
     {
       name: 'Total Facilities',
-      value: dashboardSummary.totalFacilities || 0,
+      value: metrics.totalFacilities || 0,
       icon: BuildingOfficeIcon,
       color: 'text-primary-600',
       bgColor: 'bg-primary-50',
     },
     {
       name: 'Active Targets',
-      value: dashboardSummary.activeTargets || 0,
+      value: metrics.activeTargets || 0,
       icon: ClipboardDocumentListIcon,
       color: 'text-success-600',
       bgColor: 'bg-success-50',
     },
     {
-      name: 'Monthly Emissions',
-      value: `${((dashboardSummary.monthlyEmissions?.total || 0) / 1000000).toFixed(1)}M`,
+      name: 'Annual Emissions',
+      value: formatNumber(metrics.totalEmissions || 0, { compact: true }),
       unit: 'kgCO2e',
       icon: FireIcon,
       color: 'text-danger-600',
       bgColor: 'bg-danger-50',
     },
     {
-      name: 'Monthly Production',
-      value: `${((dashboardSummary.monthlyProduction?.total || 0) / 1000).toFixed(1)}k`,
+      name: 'Annual Production',
+      value: formatNumber(metrics.totalProduction || 0, { compact: true }),
       unit: 'tonnes',
       icon: ScaleIcon,
       color: 'text-warning-600',
       bgColor: 'bg-warning-50',
     },
   ];
+
+  console.log('📊 Final dashboard stats values:', dashboardStats.map(s => ({ name: s.name, value: s.value })));
 
   return (
     <div className="space-y-6">
@@ -135,7 +152,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Welcome back, {user?.first_name}!
+              Welcome back, {user?.firstName}!
             </h1>
             <p className="text-gray-600 mt-1">
               Comprehensive dashboard with analytics & insights for your sustainability data
@@ -143,6 +160,17 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex space-x-3">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="form-input text-sm"
+              >
+                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
               <select
                 value={selectedFacility}
                 onChange={(e) => setSelectedFacility(e.target.value)}
@@ -156,14 +184,12 @@ const Dashboard = () => {
                 ))}
               </select>
               <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
+                value={chartTimePeriod}
+                onChange={(e) => setChartTimePeriod(e.target.value)}
                 className="form-input text-sm"
               >
-                <option value="12months">Last 12 Months</option>
-                <option value="6months">Last 6 Months</option>
-                <option value="3months">Last 3 Months</option>
-                <option value="ytd">Year to Date</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
               </select>
             </div>
             <div className="text-right">
@@ -178,7 +204,7 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
+        {dashboardStats.map((stat) => (
           <div
             key={stat.name}
             className="bg-white shadow-sm rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
@@ -208,7 +234,7 @@ const Dashboard = () => {
             <div>
               <p className="text-sm font-medium text-gray-500">Total Emissions Trend</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {emissionsTrend.isPositive ? '+' : '-'}{emissionsTrend.value}%
+                {emissionsTrend.isPositive ? '+' : '-'}{parseFloat(emissionsTrend.value).toFixed(2)}%
               </p>
             </div>
             <div className={`p-3 rounded-lg ${
@@ -237,7 +263,7 @@ const Dashboard = () => {
             <div>
               <p className="text-sm font-medium text-gray-500">Production Trend</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {productionTrend.isPositive ? '+' : '-'}{productionTrend.value}%
+                {productionTrend.isPositive ? '+' : '-'}{parseFloat(productionTrend.value).toFixed(2)}%
               </p>
             </div>
             <div className={`p-3 rounded-lg ${
@@ -266,7 +292,7 @@ const Dashboard = () => {
             <div>
               <p className="text-sm font-medium text-gray-500">Carbon Intensity Trend</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {intensityTrend.isPositive ? '+' : '-'}{intensityTrend.value}%
+                {intensityTrend.isPositive ? '+' : '-'}{parseFloat(intensityTrend.value).toFixed(2)}%
               </p>
             </div>
             <div className={`p-3 rounded-lg ${
@@ -333,7 +359,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div>
               <p className="font-medium text-gray-900">Renewable Energy</p>
-              <p className="text-sm text-gray-500">Mix: {((dashboardSummary.monthlyEnergy?.renewable_percentage || 0) * 100).toFixed(0)}%</p>
+              <p className="text-sm text-gray-500">Mix: {((metrics.carbonIntensity || 0) * 100).toFixed(0)}%</p>
             </div>
             <div className="text-right">
               <p className="text-lg font-bold text-success-600">+8.4%</p>
@@ -391,7 +417,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <EmissionsChart timePeriod={chartTimePeriod} emissions={emissions} />
+            <EmissionsChart timePeriod={chartTimePeriod} emissions={metrics.monthlyEmissions || []} />
           </div>
 
           {/* Production Trend Chart */}
@@ -409,7 +435,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <ProductionChart timePeriod={chartTimePeriod} production={production} />
+            <ProductionChart timePeriod={chartTimePeriod} production={metrics.monthlyProduction || []} />
           </div>
 
           {/* Carbon Intensity Chart */}
@@ -425,7 +451,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <CarbonIntensityChart timePeriod={chartTimePeriod} emissions={emissions} production={production} />
+            <CarbonIntensityChart timePeriod={chartTimePeriod} emissions={metrics.monthlyEmissions || []} production={metrics.monthlyProduction || []} />
           </div>
 
           {/* Energy Consumption Chart */}
@@ -459,7 +485,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <EnergyIntensityChart timePeriod={chartTimePeriod} production={production} />
+            <EnergyIntensityChart timePeriod={chartTimePeriod} production={metrics.monthlyProduction || []} />
           </div>
 
           {/* Facility Carbon Intensity Comparison */}
@@ -477,7 +503,7 @@ const Dashboard = () => {
             </div>
             <FacilityCarbonIntensityChart 
               timePeriod={chartTimePeriod} 
-              facilities={facilities} 
+              facilities={facilities || []} 
             />
           </div>
 
@@ -496,7 +522,7 @@ const Dashboard = () => {
             </div>
             <FacilityEnergyIntensityChart 
               timePeriod={chartTimePeriod} 
-              facilities={facilities} 
+              facilities={facilities || []} 
             />
           </div>
         </div>
@@ -795,7 +821,7 @@ const CarbonIntensityChart = ({ timePeriod, emissions, production }) => {
               const current = intensityData[intensityData.length - 1];
               const previous = intensityData[intensityData.length - 2];
               const change = ((current - previous) / previous) * 100;
-              return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
+              return `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
             })()}
           </div>
           <div className="text-gray-500">vs Previous</div>
@@ -1202,7 +1228,7 @@ const EnergyIntensityChart = ({ timePeriod, production }) => {
               const current = intensityData[intensityData.length - 1];
               const previous = intensityData[intensityData.length - 2];
               const change = ((current - previous) / previous) * 100;
-              return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
+              return `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
             })()}
           </div>
           <div className="text-gray-500">vs Previous</div>

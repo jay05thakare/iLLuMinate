@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useData } from '../../context/DataContext';
+import { useEmission } from '../../contexts/EmissionContext';
+import { useFacility } from '../../contexts/FacilityContext';
 import {
   CalendarIcon,
   FireIcon,
@@ -7,19 +8,27 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
+import { useNotification } from '../../contexts/NotificationContext';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import apiService from '../../services/api';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
-const EmissionDataForm = ({ facilityId, onClose, onSubmit }) => {
-  const { mockData } = useData();
+const EmissionDataForm = ({ facilityId, onClose, onSubmit, emissionData = null, mode = 'add' }) => {
+  const { resources, factors } = useEmission();
+  const { facilities } = useFacility();
+  const { showSuccess, showError } = useNotification();
+  const { handleError, clearError } = useErrorHandler();
+  
   const [formData, setFormData] = useState({
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
-    scope: 'scope1',
-    resource_type: '',
+    facilityResourceId: '',
     consumption: '',
-    consumption_unit: '',
+    consumptionUnit: 'tonnes',
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [facilityResources, setFacilityResources] = useState([]);
 
   // Get available emission resources
   const emissionResources = mockData.emissionResources || [];
@@ -82,30 +91,53 @@ const EmissionDataForm = ({ facilityId, onClose, onSubmit }) => {
     if (!validateForm()) return;
 
     setLoading(true);
+    clearError(); // Clear any previous errors
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newEntry = {
-        id: `emission-${Date.now()}`,
-        facility_id: facilityId,
+      const emissionDataPayload = {
+        facilityId,
+        facilityResourceId: formData.facilityResourceId,
         month: parseInt(formData.month),
         year: parseInt(formData.year),
-        scope: formData.scope,
-        resource_type: formData.resource_type,
         consumption: parseFloat(formData.consumption),
-        consumption_unit: formData.consumption_unit,
-        // Mock calculations
-        emission_factor: 2.5,
-        total_emissions: parseFloat(formData.consumption) * 2.5,
-        created_at: new Date().toISOString(),
+        consumptionUnit: formData.consumptionUnit,
       };
 
-      onSubmit?.(newEntry);
-      onClose?.();
+      let response;
+      if (mode === 'add') {
+        response = await apiService.createEmissionData(emissionDataPayload);
+      } else {
+        response = await apiService.updateEmissionData(emissionData.id, {
+          consumption: parseFloat(formData.consumption),
+          consumptionUnit: formData.consumptionUnit,
+        });
+      }
+      
+      if (response.success) {
+        showSuccess(
+          `Emission data ${mode === 'add' ? 'created' : 'updated'} successfully`,
+          { title: mode === 'add' ? 'Data Created' : 'Data Updated' }
+        );
+        onSubmit?.(response.data);
+        onClose?.();
+      } else {
+        throw new Error(response.message || `Failed to ${mode} emission data`);
+      }
     } catch (error) {
-      setErrors({ submit: 'Failed to save emission data. Please try again.' });
+      handleError(error, { 
+        context: `${mode === 'add' ? 'Creating' : 'Updating'} emission data`,
+        facilityId,
+        period: `${formData.year}-${formData.month}`
+      });
+      
+      // Handle specific error cases
+      if (error.response?.status === 409) {
+        setErrors({ submit: 'Emission data already exists for this period and resource.' });
+      } else if (error.response?.status === 404) {
+        setErrors({ submit: 'Facility resource configuration not found. Please configure resources first.' });
+      } else if (error.response?.status === 422) {
+        setErrors({ submit: 'Please check your input data.' });
+      }
     } finally {
       setLoading(false);
     }

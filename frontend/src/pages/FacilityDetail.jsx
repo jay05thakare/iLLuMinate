@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useData } from '../context/DataContext';
+import { useFacilityData } from '../hooks/useData';
+import { useFacility } from '../contexts/FacilityContext';
+import { useEmission } from '../contexts/EmissionContext';
+import apiService from '../services/api';
 import CementCalculatorModal from '../components/modals/CementCalculatorModal';
 import CementDataEntryModal from '../components/modals/CementDataEntryModal';
 import {
@@ -17,7 +20,9 @@ import {
 
 const FacilityDetail = () => {
   const { facilityId } = useParams();
-  const { facilities, emissions, production, targets, loading } = useData();
+  const { facility, resources, emissionData, metrics, loading } = useFacilityData(facilityId);
+  const { getFacilityById } = useFacility();
+  const { facilityAssignments, fetchFacilityAssignments } = useEmission();
   const [activeTab, setActiveTab] = useState('profile');
   const [activeSubTab, setActiveSubTab] = useState('data');
   const [cementModalOpen, setCementModalOpen] = useState(false);
@@ -27,6 +32,52 @@ const FacilityDetail = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [cementDataEntries, setCementDataEntries] = useState([]);
+  const [facilityTargets, setFacilityTargets] = useState([]);
+  const [targetsLoading, setTargetsLoading] = useState(false);
+
+  // Fetch facility assignments for this facility when component mounts
+  useEffect(() => {
+    if (facilityId && !facilityAssignments[facilityId]) {
+      fetchFacilityAssignments(facilityId);
+    }
+  }, [facilityId, facilityAssignments, fetchFacilityAssignments]);
+
+  // Fetch facility-specific targets
+  useEffect(() => {
+    const fetchFacilityTargets = async () => {
+      if (!facilityId) return;
+      
+      try {
+        setTargetsLoading(true);
+        console.log('🎯 Fetching targets for facility:', facilityId);
+        
+        const response = await apiService.getTargets({ facilityId });
+        console.log('🎯 Facility targets API response:', response);
+        
+        if (response.success && response.data && response.data.targets) {
+          setFacilityTargets(response.data.targets);
+          console.log('🎯 Facility targets loaded:', response.data.targets.length);
+        } else {
+          console.error('🎯 Failed to fetch facility targets:', response.message);
+          setFacilityTargets([]);
+        }
+      } catch (error) {
+        console.error('🎯 Error fetching facility targets:', error);
+        setFacilityTargets([]);
+      } finally {
+        setTargetsLoading(false);
+      }
+    };
+
+    fetchFacilityTargets();
+  }, [facilityId]);
+
+  // Get facility-specific assigned resources
+  const facilityResources = facilityAssignments[facilityId] || [];
+  
+  // Add debug logs to see what data we have
+  console.log('🔧 FacilityDetail: facilityAssignments data:', facilityAssignments);
+  console.log('🔧 FacilityDetail: facilityResources for this facility:', facilityResources);
 
   if (loading) {
     return (
@@ -36,8 +87,6 @@ const FacilityDetail = () => {
     );
   }
 
-  const facility = facilities.find(f => f.id === facilityId);
-  
   if (!facility) {
     return (
       <div className="text-center py-12">
@@ -50,15 +99,14 @@ const FacilityDetail = () => {
     );
   }
 
-  // Get facility-specific data
-  const facilityEmissions = emissions.filter(e => e.facility_id === facilityId);
-  const facilityProduction = production.filter(p => p.facility_id === facilityId);
-  const facilityTargets = targets.filter(t => t.facility_id === facilityId);
-
-  // Calculate summary metrics
-  const yearlyEmissions = facilityEmissions.reduce((sum, e) => sum + (e.total_emissions || 0), 0);
-  const yearlyProduction = facilityProduction.reduce((sum, p) => sum + (p.cement_production || 0), 0);
-  const carbonIntensity = yearlyProduction > 0 ? (yearlyEmissions / yearlyProduction) : 0;
+  // Extract metrics or calculate defaults
+  const yearlyEmissions = parseFloat(metrics?.totalEmissions || emissionData?.reduce((sum, e) => sum + (parseFloat(e.total_emissions) || 0), 0) || 0) || 0;
+  const yearlyProduction = parseFloat(metrics?.totalProduction || 0) || 0;
+  const carbonIntensity = parseFloat(metrics?.carbonIntensity || (yearlyProduction > 0 ? (yearlyEmissions / yearlyProduction) : 0)) || 0;
+  
+  // Compatibility data for components that expect legacy format
+  const facilityEmissions = emissionData || [];
+  const facilityProduction = metrics?.totalProduction || 0;
 
   // Handle calculator configuration
   const handleCalculatorConfigure = (calculator) => {
@@ -112,17 +160,21 @@ const FacilityDetail = () => {
             facilityTargets={facilityTargets}
           />
         );
-      case 'sustainability':
-        return <SustainabilityTab 
-          facility={facility} 
-          emissions={facilityEmissions} 
-          production={facilityProduction} 
-          targets={facilityTargets}
-          activeSubTab={activeSubTab}
-          setActiveSubTab={setActiveSubTab}
-          onCalculatorConfigure={handleCalculatorConfigure}
-          calculatorConfigs={calculatorConfigs}
-        />;
+        case 'sustainability':
+          return <SustainabilityTab 
+            facility={facility} 
+            emissions={facilityEmissions} 
+            production={facilityProduction} 
+            targets={facilityTargets}
+            resources={facilityResources}
+            emissionData={emissionData}
+            activeSubTab={activeSubTab}
+            setActiveSubTab={setActiveSubTab}
+            onCalculatorConfigure={handleCalculatorConfigure}
+            calculatorConfigs={calculatorConfigs}
+            targetsLoading={targetsLoading}
+            facilityResources={facilityResources}
+          />;
       case 'recommendations':
         return <RecommendationsTab facility={facility} />;
       default:
@@ -218,7 +270,7 @@ const FacilityDetail = () => {
   };
 
 // Sustainability Tab Component with Sub-tabs
-const SustainabilityTab = ({ facility, emissions, production, targets, activeSubTab, setActiveSubTab, onCalculatorConfigure, calculatorConfigs }) => {
+const SustainabilityTab = ({ facility, emissions, production, targets, resources, emissionData, activeSubTab, setActiveSubTab, onCalculatorConfigure, calculatorConfigs, facilityResources, targetsLoading }) => {
   const subTabs = [
     { id: 'data', name: 'Data', icon: ChartBarIcon },
     { id: 'goals', name: 'Goals', icon: ClipboardDocumentListIcon },
@@ -232,11 +284,13 @@ const SustainabilityTab = ({ facility, emissions, production, targets, activeSub
           facility={facility} 
           emissions={emissions} 
           production={production} 
+          resources={facilityResources}
+          emissionData={emissionData}
           onCalculatorConfigure={onCalculatorConfigure}
           calculatorConfigs={calculatorConfigs}
         />;
       case 'goals':
-        return <TargetsTab facility={facility} targets={targets} />;
+        return <TargetsTab facility={facility} targets={targets} loading={targetsLoading} />;
       case 'fuels':
         return <FuelsTab facility={facility} />;
       default:
@@ -244,6 +298,8 @@ const SustainabilityTab = ({ facility, emissions, production, targets, activeSub
           facility={facility} 
           emissions={emissions} 
           production={production} 
+          resources={facilityResources}
+          emissionData={emissionData}
           onCalculatorConfigure={onCalculatorConfigure}
           calculatorConfigs={calculatorConfigs}
         />;
@@ -285,7 +341,7 @@ const SustainabilityTab = ({ facility, emissions, production, targets, activeSub
 };
 
 // Profile Tab Component
-const ProfileTab = ({ facility, yearlyEmissions, yearlyProduction, carbonIntensity, facilityTargets }) => (
+const ProfileTab = ({ facility, yearlyEmissions, yearlyProduction, carbonIntensity, facilityTargets = [] }) => (
   <div className="space-y-6">
     {/* Facility Information */}
     <div className="card p-6">
@@ -393,30 +449,48 @@ const ProfileTab = ({ facility, yearlyEmissions, yearlyProduction, carbonIntensi
 );
 
 // Data Tab Component
-const DataTab = ({ facility, emissions, production, onCalculatorConfigure, calculatorConfigs }) => {
-  const { mockData } = useData();
+const DataTab = ({ facility, emissions, production, resources, emissionData, onCalculatorConfigure, calculatorConfigs }) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [consumptionData, setConsumptionData] = useState({});
   const [productionValue, setProductionValue] = useState('');
   const [showIndustrialModal, setShowIndustrialModal] = useState(false);
   
-  // Get the comprehensive data structures
-  const emissionResources = mockData.emissionResources || [];
-  const emissionFactors = mockData.emissionFactors || [];
-  const organizationResources = mockData.organizationResources || [];
-  const facilityResources = mockData.facilityResources || [];
+  // Use the facility-specific data passed as props
+  const facilityResourcesList = resources || [];
+  const facilityEmissionData = emissionData || [];
+  
+  console.log('🔧 DataTab: Facility resources received:', facilityResourcesList);
+  console.log('🔧 DataTab: Emission data received:', facilityEmissionData);
+  
+  // Transform facility assignments to match expected format
+  const transformedResources = facilityResourcesList.map(assignment => ({
+    id: assignment.resource_id,
+    resource_id: assignment.resource_id,
+    resource_name: assignment.resource_name,
+    category: assignment.category,
+    scope: assignment.scope,
+    emission_factor: assignment.emission_factor,
+    emission_factor_unit: assignment.emission_factor_unit,
+    heat_content: assignment.heat_content,
+    heat_content_unit: assignment.heat_content_unit,
+    library_name: assignment.library_name,
+    library_year: assignment.library_year
+  }));
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
   
-  // Helper functions for calculations (keeping existing logic)
+  // Helper functions for calculations (adapted for facility resources)
   const getResourceWithFactor = (resourceId) => {
-    const resource = emissionResources.find(r => r.id === resourceId);
-    const factor = emissionFactors.find(ef => ef.resource_id === resourceId);
-    return { ...resource, emissionFactor: factor };
+    // Find the resource with emission factor data already included
+    const facilityResource = transformedResources.find(r => 
+      r.resource_id === resourceId || 
+      r.id === resourceId
+    );
+    return facilityResource || null;
   };
 
   const handleConsumptionChange = (resourceId, value) => {
@@ -427,22 +501,28 @@ const DataTab = ({ facility, emissions, production, onCalculatorConfigure, calcu
   };
 
   const calculateEmissions = (resource, consumption) => {
-    if (!resource.emissionFactor || !consumption) return 0;
-    return (consumption * resource.emissionFactor.emission_factor) || 0;
+    const factor = parseFloat(resource.emission_factor) || 0;
+    if (!factor || !consumption) return 0;
+    const result = parseFloat(consumption) * factor;
+    return parseFloat(result) || 0;
   };
 
   const calculateHeatContent = (resource, consumption) => {
-    if (!resource.emissionFactor || !consumption) return 0;
-    return (consumption * (resource.emissionFactor.heat_content || 0)) || 0;
+    const heatContent = parseFloat(resource.heat_content) || 0;
+    if (!heatContent || !consumption) return 0;
+    const result = parseFloat(consumption) * heatContent;
+    return parseFloat(result) || 0;
   };
 
-  // Get resources by category for the new structure
+  // Get facility resources by category
   const getResourcesByCategory = (scope, category) => {
-    return emissionResources.filter(r => 
-      r.scope === scope && 
-      r.category === category && 
-      !r.is_calculator
-    ).map(resource => getResourceWithFactor(resource.id));
+    return transformedResources.filter(r => {
+      const resourceScope = r.scope;
+      const resourceCategory = r.category;
+      
+      return resourceScope === scope && 
+             resourceCategory === category;
+    });
   };
 
   const handleIndustrialProcessClick = () => {
@@ -678,13 +758,21 @@ const CategorySection = ({
             </thead>
             <tbody className="bg-white">
               {resources.map((resource) => {
-                const consumption = consumptionData[resource.id] || 0;
+                const resourceId = resource.id || resource.facilityResourceId || resource.resource?.id;
+                const resourceName = resource.name || resource.resource?.name || resource.resource_name || 'Unknown Resource';
+                // Direct access to flat data structure from API
+                const factorValue = parseFloat(resource.emission_factor) || 0;
+                const unit = resource.emission_factor_unit || 'N/A';
+                const heatContentValue = parseFloat(resource.heat_content) || 0;
+                const heatUnit = resource.heat_content_unit || 'GJ';
+                
+                const consumption = consumptionData[resourceId] || 0;
                 const emissions = calculateEmissions(resource, consumption);
                 const heat = calculateHeatContent(resource, consumption);
                 
                 return (
-                  <tr key={resource.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-3 font-medium text-gray-900">{resource.resource_name}</td>
+                  <tr key={resourceId} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-3 px-3 font-medium text-gray-900">{resourceName}</td>
                     <td className="py-3 px-3 text-center">
                       <input 
                         type="number" 
@@ -692,21 +780,15 @@ const CategorySection = ({
                         placeholder="0"
                         step="0.01"
                         value={consumption || ''}
-                        onChange={(e) => handleConsumptionChange(resource.id, e.target.value)}
+                        onChange={(e) => handleConsumptionChange(resourceId, e.target.value)}
                       />
                     </td>
-                    <td className="py-3 px-3 text-center text-gray-600">{resource.unit}</td>
+                    <td className="py-3 px-3 text-center text-gray-600">{unit}</td>
                     <td className="py-3 px-3 text-center text-gray-600">
-                      {resource.emissionFactor ? 
-                        `${resource.emissionFactor.emission_factor} ${resource.emissionFactor.emission_factor_unit}` : 
-                        'N/A'
-                      }
+                      {factorValue > 0 ? `${factorValue} ${unit}` : 'N/A'}
                     </td>
                     <td className="py-3 px-3 text-center text-gray-600">
-                      {resource.emissionFactor && resource.emissionFactor.heat_content > 0 ? 
-                        `${resource.emissionFactor.heat_content} ${resource.emissionFactor.heat_content_unit}` : 
-                        'N/A'
-                      }
+                      {heatContentValue > 0 ? `${heatContentValue} ${heatUnit}` : 'N/A'}
                     </td>
                     <td className="py-3 px-3 text-center font-medium text-red-600">
                       {emissions.toFixed(2)} kgCO2e
@@ -770,53 +852,95 @@ const ProductionDataSection = ({ productionValue, setProductionValue }) => (
 );
 
 // Targets Tab Component
-const TargetsTab = ({ facility, targets }) => (
-  <div className="space-y-6">
-    <div className="flex justify-between items-center">
-      <h3 className="text-lg font-medium text-gray-900">Facility Goals</h3>
-      <button className="btn-primary">Create New Target</button>
-    </div>
+const TargetsTab = ({ facility, targets, loading }) => {
+  const calculateProgress = (target) => {
+    // Same calculation logic as in Targets.jsx
+    if (!target || typeof target.baselineValue !== 'number' || typeof target.targetValue !== 'number' || 
+        typeof target.baselineYear !== 'number' || typeof target.targetYear !== 'number') {
+      return 0;
+    }
+
+    const currentYear = new Date().getFullYear();
+    const totalYears = target.targetYear - target.baselineYear;
+    const elapsedYears = currentYear - target.baselineYear;
     
-    {targets.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {targets.map((target) => (
-          <div key={target.id} className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-lg font-medium text-gray-900">{target.name}</h4>
-              <span className={`badge-${target.status === 'active' ? 'info' : 'success'}`}>
-                {target.status}
-              </span>
-            </div>
-            <p className="text-gray-600 text-sm mb-4">{target.description}</p>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Baseline ({target.baseline_year})</span>
-                <span className="font-medium">{target.baseline_value} {target.unit}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Target ({target.target_year})</span>
-                <span className="font-medium text-primary-600">
-                  {target.target_value} {target.unit}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
-                <div className="bg-primary-600 h-2 rounded-full" style={{ width: '45%' }}></div>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">45% progress towards target</p>
-            </div>
-          </div>
-        ))}
+    if (totalYears <= 0) {
+      return target.baselineYear <= currentYear ? 100 : 0;
+    }
+    
+    const timeProgress = Math.min(Math.max((elapsedYears / totalYears) * 100, 0), 100);
+    const valueChange = target.baselineValue - target.targetValue;
+    
+    if (Math.abs(valueChange) < 0.001) {
+      return timeProgress;
+    }
+    
+    const mockCurrentValue = target.baselineValue - (valueChange * (timeProgress / 100) * 0.7);
+    const actualChange = target.baselineValue - mockCurrentValue;
+    const valueProgress = Math.abs(actualChange / valueChange) * 100;
+    
+    return Math.min(Math.max(valueProgress, 0), 100);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="loading-spinner h-8 w-8"></div>
       </div>
-    ) : (
-      <div className="text-center py-12 card">
-        <ClipboardDocumentListIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No targets set</h3>
-        <p className="text-gray-500 mb-6">Create sustainability targets to track progress</p>
-        <button className="btn-primary">Create Your First Target</button>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium text-gray-900">Facility Goals</h3>
+        <button className="btn-primary">Create New Target</button>
       </div>
-    )}
-  </div>
-);
+      
+      {targets && targets.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {targets.map((target) => {
+            const progress = calculateProgress(target);
+            return (
+              <div key={target.id} className="card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-medium text-gray-900">{target.name}</h4>
+                  <span className={`badge-${target.status === 'active' ? 'info' : 'success'}`}>
+                    {target.status}
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">{target.description}</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Baseline ({target.baselineYear})</span>
+                    <span className="font-medium">{target.baselineValue} {target.unit}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Target ({target.targetYear})</span>
+                    <span className="font-medium text-primary-600">
+                      {target.targetValue} {target.unit}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
+                    <div className="bg-primary-600 h-2 rounded-full" style={{ width: `${progress}%` }}></div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{Math.round(progress)}% progress towards target</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-center py-12 card">
+          <ClipboardDocumentListIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No targets set</h3>
+          <p className="text-gray-500 mb-6">Create sustainability targets to track progress</p>
+          <button className="btn-primary">Create Your First Target</button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Fuels Tab Component
 const FuelsTab = ({ facility }) => (
