@@ -92,3 +92,11 @@ credentials/
 *.pem
 *.key
 *.crt
+
+# Google Cloud credentials and sensitive files
+illuminate-deploy-key.json
+*-deploy-key.json
+service-account-key.json
+cloud_sql_proxy
+.firebase/
+firebase-debug.log

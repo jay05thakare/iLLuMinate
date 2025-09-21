@@ -183,6 +183,7 @@ db-logs:
 
 migrate:
 	@echo "📊 Running database migrations..."
+	@echo "Using database credentials from environment..."
 	@cd backend && npm run migrate
 
 migrate-create:
@@ -199,6 +200,7 @@ migrate-create:
 
 migrate-status:
 	@echo "📊 Checking migration status..."
+	@echo "Using database credentials from environment..."
 	@cd backend && npm run migrate:status
 
 migrate-rollback:
@@ -211,26 +213,21 @@ migrate-history:
 
 db-reset:
 	@echo "🗑️  Resetting database with JK Cement data..."
-	@docker-compose down -v postgres
-	@docker-compose up -d postgres
-	@echo "Waiting for PostgreSQL to be ready..."
-	@sleep 5
-	@cd backend && DB_PASSWORD=illuminate123 npm run migrate
-	@cd backend && DB_PASSWORD=illuminate123 npm run db:reset
+	@echo "Using database credentials from environment..."
+	@cd backend && npm run migrate
+	@cd backend && node src/utils/resetAndSeedJK.js
 	@echo "✅ Database reset with JK Cement data completed!"
 
 db-reset-sample:
 	@echo "🗑️  Resetting database with sample data..."
-	@docker-compose down -v postgres
-	@docker-compose up -d postgres
-	@echo "Waiting for PostgreSQL to be ready..."
-	@sleep 5
-	@cd backend && DB_PASSWORD=illuminate123 npm run migrate
-	@cd backend && DB_PASSWORD=illuminate123 npm run seed
+	@echo "Using database credentials from environment..."
+	@cd backend && npm run migrate
+	@cd backend && npm run seed
 	@echo "✅ Database reset with sample data completed!"
 
 db-seed:
 	@echo "🌱 Seeding database with sample data..."
+	@echo "Using database credentials from environment..."
 	@cd backend && npm run seed
 
 db-connect:

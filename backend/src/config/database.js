@@ -19,7 +19,9 @@ const dbConfig = {
   max: config.database.maxConnections,
   connectionTimeoutMillis: config.database.connectionTimeout,
   idleTimeoutMillis: config.database.idleTimeout,
-  ssl: config.nodeEnv === 'production' ? { rejectUnauthorized: false } : false
+  // Disable SSL for Cloud SQL Unix sockets (starts with /cloudsql/)
+  ssl: config.database.host.startsWith('/cloudsql/') ? false : 
+       (config.nodeEnv === 'production' ? { rejectUnauthorized: false } : false)
 };
 
 /**

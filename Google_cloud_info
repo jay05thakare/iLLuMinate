@@ -1,0 +1,46 @@
+Creating Cloud SQL instance for POSTGRES_15...done.                                
+Created [https://sqladmin.googleapis.com/sql/v1beta4/projects/illuminate-472809/instances/illuminate-db].
+NAME           DATABASE_VERSION  LOCATION       TIER         PRIMARY_ADDRESS  PRIVATE_ADDRESS  STATUS
+illuminate-db  POSTGRES_15       us-central1-c  db-f1-micro  34.29.96.59      -                RUNNABLE
+
+
+
+~/Documents/codebase/iLLuMinate master* ⇣
+❯ gcloud sql users set-password postgres \
+  --instance=illuminate-db \
+  --password=illuminate-db
+Updating Cloud SQL user...done.                                                     
+
+~/Documents/codebase/iLLuMinate master* ⇣
+❯ gcloud sql databases create illuminate_db \
+  --instance=illuminate-db
+Creating Cloud SQL database...done.                                                
+Created database [illuminate_db].
+instance: illuminate-db
+name: illuminate_db
+project: illuminate-472809
+
+~/Documents/codebase/iLLuMinate master* ⇣
+❯ gcloud sql users create illuminate \
+  --instance=illuminate-db \
+  --password=illuminate-db
+Creating Cloud SQL user...done.                                                    
+Created user [illuminate].
+
+~/Documents/codebase/iLLuMinate master* ⇣
+❯ gcloud sql instances describe illuminate-db --format="value(connectionName)"
+illuminate-472809:us-central1:illuminate-db
+
+
+
+ Important Security Notes
+Database Credentials Generated:
+Database User: illuminate
+Database Password: e843050527f45a81c81e81be60ae9830
+JWT Secret: 6c8d92b0dc7c6c75f09dbfc240d1273349c204d5318ed14fb8f1b0457babf58b
+💡 Recommendation: Store these in Google Secret Manager for better security:
+   # Test root endpoint
+   curl https://illuminate-backend-972867566883.us-central1.run.app/
+   
+   # Test health endpoint (already working)
+   curl https://illuminate-backend-972867566883.us-central1.run.app/health

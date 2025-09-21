@@ -3,8 +3,8 @@
  * Centralized API communication with error handling and token management
  */
 
-const API_BASE_URL = 'http://localhost:3000/api';
-const AI_API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const AI_API_BASE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8000/api';
 
 class ApiError extends Error {
   constructor(message, status, code) {
