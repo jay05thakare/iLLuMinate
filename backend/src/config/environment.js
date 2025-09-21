@@ -85,6 +85,12 @@ const config = {
     publicPath: process.env.UPLOAD_PUBLIC_PATH || '/uploads'
   },
 
+  // AI Services
+  ai: {
+    apiKey: process.env.AI_SERVICE_API_KEY || 'illuminate-ai-service-2024',
+    serviceUrl: process.env.AI_SERVICE_URL || 'http://localhost:8000'
+  },
+
   // Security
   security: {
     bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS, 10) || 12,

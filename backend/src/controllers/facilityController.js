@@ -569,6 +569,111 @@ const getFacilityResources = async (req, res) => {
 };
 
 /**
+ * Get facility resources for AI service (API key authentication)
+ * GET /api/facilities/:id/resources/ai
+ */
+const getFacilityResourcesForAI = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get configured resources with emission factors and recent consumption data
+    const resourcesResult = await query(`
+      SELECT 
+        fr.id as facility_resource_id,
+        fr.is_active,
+        fr.created_at as configured_at,
+        er.id as resource_id,
+        er.resource_name,
+        er.category,
+        er.resource_type as type,
+        er.scope,
+        er.description,
+        ef.id as emission_factor_id,
+        ef.emission_factor,
+        ef.emission_factor_unit,
+        ef.heat_content,
+        ef.heat_content_unit,
+        efl.library_name,
+        efl.version as library_version,
+        efl.year as library_year,
+        -- Get recent consumption data (last 6 months)
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object(
+                'year', ed.year,
+                'month', ed.month,
+                'consumption', ed.consumption,
+                'consumption_unit', ed.consumption_unit,
+                'total_emissions', ed.total_emissions,
+                'total_energy', ed.total_energy
+              ) ORDER BY ed.year DESC, ed.month DESC
+            )
+            FROM emission_data ed 
+            WHERE ed.facility_resource_id = fr.id 
+              AND (ed.year * 12 + ed.month) >= (EXTRACT(YEAR FROM CURRENT_DATE) * 12 + EXTRACT(MONTH FROM CURRENT_DATE) - 6)
+            LIMIT 6
+          ), 
+          '[]'::json
+        ) as recent_consumption
+      FROM facility_resources fr
+      JOIN emission_resources er ON fr.resource_id = er.id
+      JOIN emission_factors ef ON fr.emission_factor_id = ef.id
+      JOIN emission_factor_libraries efl ON ef.library_id = efl.id
+      WHERE fr.facility_id = $1 AND fr.is_active = true
+      ORDER BY er.scope, er.category, er.resource_name
+    `, [id]);
+
+    const resources = resourcesResult.rows.map(resource => ({
+      facilityResourceId: resource.facility_resource_id,
+      isActive: resource.is_active,
+      configuredAt: resource.configured_at,
+      resource: {
+        id: resource.resource_id,
+        name: resource.resource_name,
+        category: resource.category,
+        type: resource.type,
+        scope: resource.scope,
+        description: resource.description
+      },
+      emissionFactor: {
+        id: resource.emission_factor_id,
+        value: parseFloat(resource.emission_factor),
+        unit: resource.emission_factor_unit,
+        heatContent: parseFloat(resource.heat_content),
+        heatContentUnit: resource.heat_content_unit,
+        library: {
+          name: resource.library_name,
+          version: resource.library_version,
+          year: resource.library_year
+        }
+      },
+      recentConsumption: resource.recent_consumption || []
+    }));
+
+    logger.info(`AI service retrieved ${resources.length} resources for facility ${id}`);
+
+    res.json({
+      success: true,
+      data: {
+        facilityId: id,
+        resources,
+        totalResources: resources.length,
+        activeResources: resources.filter(r => r.isActive).length
+      }
+    });
+
+  } catch (error) {
+    logger.error('Get facility resources for AI error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get facility resources for AI service',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
  * Bulk configure facility resources
  * POST /api/facilities/:id/resources/bulk
  */
@@ -1333,6 +1438,7 @@ module.exports = {
   updateFacility,
   deleteFacility,
   getFacilityResources,
+  getFacilityResourcesForAI,
   bulkConfigureFacilityResources,
   updateFacilityResource,
   removeFacilityResource,

@@ -4,12 +4,14 @@ Cement GPT Chat API endpoints
 
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from pydantic import BaseModel, Field
 
 from ..utils.logger import get_logger
 from ..cement_gpt import get_cement_gpt_service, CementGPTService
 from ..services.chat_service import get_chat_service, ChatService
+from ..services.cement_agent import get_cement_agent, CementAgent
+from ..middleware.auth_middleware import get_current_user, get_current_organization_id
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -20,7 +22,7 @@ class ChatRequest(BaseModel):
     message: str = Field(..., description="User's message to Cement GPT", min_length=1, max_length=2000)
     facility_id: Optional[str] = Field(None, description="Optional facility ID for context")
     session_id: Optional[str] = Field(None, description="Optional session ID for continuing conversation")
-    user_id: Optional[str] = Field(None, description="Optional user ID")
+    # Note: user_id and organization_id are now extracted from JWT token in auth middleware
 
 
 class ChatResponse(BaseModel):
@@ -31,12 +33,13 @@ class ChatResponse(BaseModel):
     model: str = Field(..., description="AI model used")
     usage: Dict[str, Any] = Field(default_factory=dict, description="Token usage information")
     facility_context: bool = Field(False, description="Whether facility context was used")
+    agent_analysis: Optional[Dict[str, Any]] = Field(None, description="Agent decision analysis")
 
 
 class SessionCreateRequest(BaseModel):
     """Session creation request model"""
-    user_id: Optional[str] = Field(None, description="Optional user ID")
     facility_id: Optional[str] = Field(None, description="Optional facility ID for context")
+    # Note: user_id and organization_id are now extracted from JWT token in auth middleware
 
 
 class SessionResponse(BaseModel):
@@ -58,9 +61,11 @@ class ChatHistoryResponse(BaseModel):
 
 @router.post("/cement-gpt", response_model=Dict[str, Any])
 async def chat_with_cement_gpt(
-    request: ChatRequest,
+    chat_request: ChatRequest,
+    http_request: Request,
     gpt_service: CementGPTService = Depends(get_cement_gpt_service),
-    chat_service: ChatService = Depends(get_chat_service)
+    chat_service: ChatService = Depends(get_chat_service),
+    agent: CementAgent = Depends(get_cement_agent)
 ):
     """
     Chat with Cement GPT
@@ -74,14 +79,23 @@ async def chat_with_cement_gpt(
         dict: Chat response with AI-generated content
     """
     try:
-        logger.info(f"Processing chat request: {request.message[:100]}...")
+        # Extract user context from JWT token via auth middleware
+        current_user = get_current_user(http_request)
+        current_org_id = get_current_organization_id(http_request)
+        
+        user_id = current_user.get("id") if current_user else None
+        organization_id = current_org_id or (current_user.get("organization_id") if current_user else None)
+        
+        logger.info(f"Processing chat request: {chat_request.message[:100]}...")
+        logger.info(f"User context: user_id={user_id}, org_id={organization_id}")
         
         # Get or create session
-        session_id = request.session_id
+        session_id = chat_request.session_id
         if not session_id:
             session_id = await chat_service.create_session(
-                user_id=request.user_id,
-                facility_id=request.facility_id
+                user_id=user_id,
+                facility_id=chat_request.facility_id,
+                organization_id=organization_id
             )
         
         # Get session for context
@@ -93,24 +107,46 @@ async def chat_with_cement_gpt(
         await chat_service.add_message(
             session_id=session_id,
             role="user",
-            content=request.message
+            content=chat_request.message
         )
         
         # Get chat history for context
         chat_history = await chat_service.get_chat_history(session_id, count=10)
         
-        # TODO: Get facility data from backend API if facility_id provided
-        facility_data = None
-        if request.facility_id:
-            # This will be implemented when we integrate with backend
-            pass
+        # Use intelligent agent to analyze question and fetch required context
+        logger.info("Using intelligent agent to analyze question and determine data requirements")
+        agent_context = await agent.get_intelligent_context(
+            question=chat_request.message,
+            facility_id=chat_request.facility_id,
+            organization_id=organization_id
+        )
         
-        # Generate AI response
+        # Extract facility data for the GPT service
+        facility_data = agent_context.get("context", {})
+        agent_analysis = agent_context.get("analysis", {})
+        agent_decision = agent_context.get("agent_decision", {})
+        
+        logger.info(f"Agent decision: requires_data={agent_decision.get('requires_data', False)}, "
+                   f"confidence={agent_analysis.get('confidence', 0)}, "
+                   f"question_type={agent_analysis.get('question_type', 'unknown')}")
+        
+        # Generate AI response with intelligent context
         ai_result = await gpt_service.generate_response(
-            user_message=request.message,
-            facility_data=facility_data,
+            user_message=chat_request.message,
+            facility_data=facility_data if agent_decision.get('requires_data', False) else None,
             chat_history=chat_history
         )
+        
+        # Add agent information to the response
+        ai_result["agent_analysis"] = {
+            "question_type": agent_analysis.get("question_type"),
+            "data_requirements": agent_analysis.get("data_requirements", []),
+            "confidence": agent_analysis.get("confidence", 0),
+            "reasoning": agent_analysis.get("reasoning", ""),
+            "requires_data": agent_decision.get("requires_data", False),
+            "data_types_fetched": agent_decision.get("data_types_fetched", []),
+            "context_type": facility_data.get("context_type", "general")
+        }
         
         # Add AI response to history
         await chat_service.add_message(
@@ -123,6 +159,23 @@ async def chat_with_cement_gpt(
             }
         )
         
+        # Save chat history to database (asynchronously, don't fail if it doesn't work)
+        try:
+            from ..services.backend_service import BackendService
+            backend_service = BackendService()
+            await backend_service.save_chat_history(
+                organization_id=organization_id,
+                user_id=user_id,
+                facility_id=chat_request.facility_id,
+                session_id=session_id,
+                message=chat_request.message,
+                response=ai_result["response"]
+            )
+            logger.debug(f"Successfully saved chat history to database for session {session_id}")
+        except Exception as e:
+            logger.warning(f"Failed to save chat history to database: {e}")
+            # Don't fail the request if database save fails
+        
         # Prepare response
         response_data = {
             "success": True,
@@ -132,8 +185,9 @@ async def chat_with_cement_gpt(
                 "timestamp": ai_result["timestamp"],
                 "model": ai_result.get("model", "unknown"),
                 "usage": ai_result.get("usage", {}),
-                "facility_context": facility_data is not None,
-                "demo_mode": ai_result.get("demo_mode", False)
+                "facility_context": agent_decision.get("requires_data", False),
+                "demo_mode": ai_result.get("demo_mode", False),
+                "agent_analysis": ai_result.get("agent_analysis", {})
             },
             "timestamp": datetime.utcnow().isoformat() + "Z"
         }
@@ -153,23 +207,35 @@ async def chat_with_cement_gpt(
 
 @router.post("/sessions", response_model=Dict[str, Any])
 async def create_chat_session(
-    request: SessionCreateRequest,
+    session_request: SessionCreateRequest,
+    http_request: Request,
     chat_service: ChatService = Depends(get_chat_service)
 ):
     """
     Create a new chat session
     
     Args:
-        request: Session creation request
+        session_request: Session creation request
+        http_request: HTTP request to extract user context from JWT
         chat_service: Chat service dependency
         
     Returns:
         dict: Session information
     """
     try:
+        # Extract user context from JWT token via auth middleware
+        current_user = get_current_user(http_request)
+        current_org_id = get_current_organization_id(http_request)
+        
+        user_id = current_user.get("id") if current_user else None
+        organization_id = current_org_id or (current_user.get("organization_id") if current_user else None)
+        
+        logger.info(f"Creating chat session for user_id={user_id}, org_id={organization_id}")
+        
         session_id = await chat_service.create_session(
-            user_id=request.user_id,
-            facility_id=request.facility_id
+            user_id=user_id,
+            facility_id=session_request.facility_id,
+            organization_id=organization_id
         )
         
         session_info = await chat_service.get_session_info(session_id)
@@ -179,8 +245,8 @@ async def create_chat_session(
             "data": {
                 "session_id": session_id,
                 "created_at": session_info["created_at"],
-                "user_id": request.user_id,
-                "facility_id": request.facility_id
+                "user_id": user_id,
+                "facility_id": session_request.facility_id
             },
             "timestamp": datetime.utcnow().isoformat() + "Z"
         }

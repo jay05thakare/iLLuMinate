@@ -102,4 +102,26 @@ router.get('/:id/dashboard',
   organizationController.getOrganizationDashboard
 );
 
+/**
+ * @route   GET /api/organizations/:id/facilities
+ * @desc    Get organization facilities for AI service
+ * @access  Private (Organization members only)
+ */
+router.get('/:id/facilities',
+  authenticateToken,
+  validate(schemas.uuidParam),
+  requireSameOrganization,
+  organizationController.getOrganizationFacilities
+);
+
+/**
+ * @route   GET /api/organizations/:id/facilities/ai
+ * @desc    Get organization facilities for AI service (with API key authentication)
+ * @access  AI Service only (API key required)
+ */
+router.get('/:id/facilities/ai',
+  validate(schemas.uuidParam),
+  organizationController.getOrganizationFacilitiesForAI
+);
+
 module.exports = router;

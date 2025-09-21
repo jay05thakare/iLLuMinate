@@ -105,6 +105,17 @@ router.get('/:id/resources',
 );
 
 /**
+ * @route   GET /api/facilities/:id/resources/ai
+ * @desc    Get facility resources for AI service (API key authentication)
+ * @access  Private (AI service only)
+ */
+router.get('/:id/resources/ai',
+  require('../middleware/authMiddleware').authenticateApiKey,
+  validate(schemas.uuidParam),
+  facilityController.getFacilityResourcesForAI
+);
+
+/**
  * @route   POST /api/facilities/:id/resources/bulk
  * @desc    Bulk configure facility resources
  * @access  Private (Admin only)

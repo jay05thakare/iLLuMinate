@@ -19,6 +19,7 @@ const aggregationRoutes = require('./routes/aggregation');
 const analyticsRoutes = require('./routes/analytics');
 const targetsRoutes = require('./routes/targets');
 const benchmarkingRoutes = require('./routes/benchmarking');
+const chatRoutes = require('./routes/chat');
 const healthRoutes = require('./routes/health');
 
 /**
@@ -90,6 +91,7 @@ const createApp = () => {
   app.use('/api/analytics', analyticsRoutes);
   app.use('/api/targets', targetsRoutes);
   app.use('/api/benchmarking', benchmarkingRoutes);
+  app.use('/api/chat', chatRoutes);
 
   // Root endpoint
   app.get('/', (req, res) => {

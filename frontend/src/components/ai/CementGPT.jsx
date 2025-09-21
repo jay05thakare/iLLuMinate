@@ -45,7 +45,7 @@ What would you like to explore today?`,
     scrollToBottom();
   }, [messages]);
 
-  // Check AI service status and initialize session
+  // Check AI service status (skip upfront session creation)
   useEffect(() => {
     const initializeAIService = async () => {
       try {
@@ -55,15 +55,8 @@ What would you like to explore today?`,
         await apiService.aiHealthCheck();
         setAiServiceStatus('available');
         
-        // Create a new chat session
-        const sessionResponse = await apiService.createChatSession(
-          user?.id || null,
-          null // Could add facility ID here if available
-        );
-        
-        if (sessionResponse.success) {
-          setSessionId(sessionResponse.data.session_id);
-        }
+        // Session will be created automatically when first message is sent
+        // No need to create session upfront since chat endpoint handles this
         
         setError(null);
       } catch (error) {
@@ -95,12 +88,17 @@ What would you like to explore today?`,
     try {
       // Call the AI service
       const response = await apiService.chatWithCementGPT(currentMessage, {
-        userId: user?.id,
         sessionId: sessionId,
         facilityId: null, // Could add facility context here
+        // Note: user_id and organization_id are now extracted from JWT token on backend
       });
 
       if (response.success) {
+        // Extract and store session ID for conversation continuity
+        if (response.data.session_id && response.data.session_id !== sessionId) {
+          setSessionId(response.data.session_id);
+        }
+        
         const assistantMessage = {
           id: messages.length + 2,
           type: 'assistant',

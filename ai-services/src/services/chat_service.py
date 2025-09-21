@@ -17,10 +17,11 @@ logger = get_logger(__name__)
 class ChatSession:
     """Represents a chat session"""
     
-    def __init__(self, session_id: str, user_id: Optional[str] = None, facility_id: Optional[str] = None):
+    def __init__(self, session_id: str, user_id: Optional[str] = None, facility_id: Optional[str] = None, organization_id: Optional[str] = None):
         self.session_id = session_id
         self.user_id = user_id
         self.facility_id = facility_id
+        self.organization_id = organization_id
         self.created_at = datetime.utcnow()
         self.last_activity = datetime.utcnow()
         self.messages: List[Dict[str, Any]] = []
@@ -52,6 +53,7 @@ class ChatSession:
             "session_id": self.session_id,
             "user_id": self.user_id,
             "facility_id": self.facility_id,
+            "organization_id": self.organization_id,
             "created_at": self.created_at.isoformat() + "Z",
             "last_activity": self.last_activity.isoformat() + "Z",
             "message_count": len(self.messages),
@@ -119,7 +121,8 @@ class ChatService:
     async def create_session(
         self, 
         user_id: Optional[str] = None, 
-        facility_id: Optional[str] = None
+        facility_id: Optional[str] = None,
+        organization_id: Optional[str] = None
     ) -> str:
         """
         Create a new chat session
@@ -127,6 +130,7 @@ class ChatService:
         Args:
             user_id: Optional user ID
             facility_id: Optional facility ID
+            organization_id: Optional organization ID
             
         Returns:
             str: Session ID
@@ -134,7 +138,7 @@ class ChatService:
         self._ensure_cleanup_task()
         
         session_id = str(uuid4())
-        session = ChatSession(session_id, user_id, facility_id)
+        session = ChatSession(session_id, user_id, facility_id, organization_id)
         self.sessions[session_id] = session
         
         logger.info(f"Created new chat session: {session_id}")
@@ -195,7 +199,7 @@ class ChatService:
         count: Optional[int] = None
     ) -> Optional[List[Dict[str, Any]]]:
         """
-        Get chat history for session
+        Get chat history for session (tries database first, then memory)
         
         Args:
             session_id: Session ID
@@ -205,6 +209,37 @@ class ChatService:
             List of messages or None
         """
         try:
+            # Try to get chat history from database first
+            try:
+                from ..services.backend_service import BackendService
+                from ..config.settings import get_settings
+                
+                # Use httpx to call the backend API directly
+                import httpx
+                settings = get_settings()
+                
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(
+                        f"{settings.backend_api_url}/api/chat/history/{session_id}",
+                        headers={
+                            "X-API-Key": settings.backend_api_key,
+                            "Content-Type": "application/json"
+                        },
+                        params={"limit": count or 50}
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data.get("success") and data.get("data", {}).get("messages"):
+                            messages = data["data"]["messages"]
+                            logger.debug(f"Retrieved {len(messages)} messages from database for session {session_id}")
+                            return messages
+                        
+            except Exception as db_error:
+                logger.debug(f"Database chat history retrieval failed: {db_error}")
+                # Fall through to memory-based retrieval
+                
+            # Fallback to in-memory session data
             session = await self.get_session(session_id)
             if not session:
                 return None
@@ -262,7 +297,8 @@ class ChatService:
     async def list_sessions(
         self, 
         user_id: Optional[str] = None, 
-        facility_id: Optional[str] = None
+        facility_id: Optional[str] = None,
+        organization_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         List chat sessions
@@ -270,6 +306,7 @@ class ChatService:
         Args:
             user_id: Optional filter by user ID
             facility_id: Optional filter by facility ID
+            organization_id: Optional filter by organization ID
             
         Returns:
             List of session info
@@ -283,11 +320,14 @@ class ChatService:
                     continue
                 if facility_id and session.facility_id != facility_id:
                     continue
+                if organization_id and session.organization_id != organization_id:
+                    continue
                 
                 sessions.append({
                     "session_id": session.session_id,
                     "user_id": session.user_id,
                     "facility_id": session.facility_id,
+                    "organization_id": session.organization_id,
                     "created_at": session.created_at.isoformat() + "Z",
                     "last_activity": session.last_activity.isoformat() + "Z",
                     "message_count": len(session.messages)

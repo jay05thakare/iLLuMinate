@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     # Backend API
     backend_api_url: str = "http://localhost:3000"
     backend_api_timeout: int = 30
+    backend_api_key: str = "illuminate-ai-service-2024"
     
     # Logging
     log_level: str = "INFO"

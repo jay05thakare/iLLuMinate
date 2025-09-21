@@ -45,6 +45,15 @@ Your knowledge includes:
 - Clinker-to-cement ratio
 - Thermal efficiency
 
+🧮 CARBON FOOTPRINT CALCULATIONS:
+ALWAYS perform calculations when consumption data and emission factors are available:
+- Total Emissions = Σ(Consumption × Emission Factor) for each resource
+- Emission Intensity = Total Emissions ÷ Production Volume
+- For facilities with configured resources, calculate actual CO2e values
+- If no consumption data exists, clearly state "No consumption data currently configured"
+- Provide step-by-step calculation methodology and sample calculations when possible
+- Show what the calculations would look like with example data
+
 🎯 SUSTAINABILITY TARGETS:
 - Net Zero commitments and pathways
 - Energy efficiency improvements
@@ -66,17 +75,57 @@ Use technical terminology appropriately and cite relevant industry practices whe
     @staticmethod
     def get_facility_context(facility_data: Optional[Dict] = None) -> str:
         """
-        Get facility-specific context if available
+        Get facility-specific or organization-specific context if available
         
         Args:
-            facility_data: Optional facility data
+            facility_data: Optional facility data (single facility or organization)
             
         Returns:
-            str: Facility context
+            str: Facility/organization context
         """
         if not facility_data:
             return "\nNo specific facility data available for this query."
+        
+        # Handle organization-level data (multiple facilities)
+        if "organization_facilities" in facility_data:
+            facilities = facility_data.get("organization_facilities", [])
+            facility_count = facility_data.get("facility_count", 0)
             
+            if facility_count == 0:
+                return "\nORGANIZATION CONTEXT:\n- No facilities found in your organization."
+            
+            context_parts = [
+                f"\nORGANIZATION FACILITIES OVERVIEW:",
+                f"- Total Facilities: {facility_count}",
+                ""
+            ]
+            
+            for i, facility in enumerate(facilities[:5], 1):  # Show first 5 facilities for context
+                facility_info = [
+                    f"FACILITY {i}: {facility.get('name', 'Unnamed')}",
+                    f"  - Location: {facility.get('location', {}).get('city', 'N/A')}, {facility.get('location', {}).get('country', 'N/A')}",
+                    f"  - Type: {facility.get('facility_type', 'N/A')}",
+                    f"  - Capacity: {facility.get('annual_production_capacity_tons', 'N/A')} tons/year",
+                    ""
+                ]
+                context_parts.extend(facility_info)
+            
+            if facility_count > 5:
+                context_parts.append(f"... and {facility_count - 5} more facilities")
+            
+            # Add targets context if available
+            targets_context = CementPrompts._get_targets_context(facility_data)
+            if targets_context:
+                context_parts.extend(["", targets_context])
+            
+            # Add resources context if available (for organization-level)
+            resources_context = CementPrompts._get_resources_context(facility_data)
+            if resources_context:
+                context_parts.extend(["", resources_context])
+            
+            return "\n".join(context_parts)
+        
+        # Handle single facility data (existing logic)
         context = f"""
 \nFACILITY CONTEXT:
 - Name: {facility_data.get('name', 'N/A')}
@@ -86,7 +135,165 @@ Use technical terminology appropriately and cite relevant industry practices whe
 - Energy Intensity: {facility_data.get('energy_intensity', 'N/A')} MJ/ton
 - Alternative Fuel Rate: {facility_data.get('alt_fuel_rate', 'N/A')}%
 """
+        
+        # Add targets context if available
+        targets_context = CementPrompts._get_targets_context(facility_data)
+        if targets_context:
+            context += "\n" + targets_context
+        
+        # Add resources context if available
+        resources_context = CementPrompts._get_resources_context(facility_data)
+        if resources_context:
+            context += "\n" + resources_context
+        else:
+            # If no resources configured, add guidance for calculations
+            context += """
+RESOURCE CONFIGURATION STATUS:
+- No consumption data currently configured for this facility
+- To calculate carbon footprint, the following data would be needed:
+  • Fuel consumption (coal, gas, alternative fuels) with emission factors
+  • Electricity consumption with grid emission factors
+  • Raw material consumption with process emission factors
+  • Production volumes for emission intensity calculations
+
+CALCULATION EXAMPLE (what would happen with data):
+If your facility had consumption data configured, the calculation would be:
+- Coal: 1000 tonnes/month × 2.42 kgCO2/kg = 2,420 tonnes CO2
+- Electricity: 500 MWh/month × 0.82 kgCO2/kWh = 410 tonnes CO2
+- Process: 1500 tonnes cement × 0.52 kgCO2/kg = 780 tonnes CO2
+- Total: 3,610 tonnes CO2/month
+- Emission Intensity: 2,407 kgCO2/tonne cement
+
+When actual data is configured, calculations will be performed automatically."""
+        
         return context
+
+    @staticmethod
+    def _get_targets_context(facility_data: Optional[Dict] = None) -> str:
+        """
+        Get targets context from facility data
+        
+        Args:
+            facility_data: Facility or organization data that may contain targets
+            
+        Returns:
+            str: Formatted targets context or empty string
+        """
+        if not facility_data or "targets" not in facility_data:
+            return ""
+        
+        targets = facility_data.get("targets", [])
+        target_count = facility_data.get("target_count", len(targets))
+        
+        if not targets or target_count == 0:
+            return "SUSTAINABILITY TARGETS:\n- No targets currently set"
+        
+        context_parts = [
+            "SUSTAINABILITY TARGETS:",
+            f"- Total Active Targets: {target_count}",
+            ""
+        ]
+        
+        # Group targets by type for better presentation
+        targets_by_type = {}
+        for target in targets[:10]:  # Show first 10 targets
+            target_type = target.get("targetType", "general")
+            if target_type not in targets_by_type:
+                targets_by_type[target_type] = []
+            targets_by_type[target_type].append(target)
+        
+        for target_type, type_targets in targets_by_type.items():
+            context_parts.append(f"{target_type.upper()} TARGETS:")
+            
+            for target in type_targets:
+                target_info = [
+                    f"  • {target.get('name', 'Unnamed Target')}",
+                    f"    - Baseline: {target.get('baselineValue', 'N/A')} {target.get('unit', '')} ({target.get('baselineYear', 'N/A')})",
+                    f"    - Target: {target.get('targetValue', 'N/A')} {target.get('unit', '')} by {target.get('targetYear', 'N/A')}",
+                    f"    - Status: {target.get('status', 'N/A')}",
+                    f"    - Facility: {target.get('facility', {}).get('name', 'Organization-wide') if target.get('facility') else 'Organization-wide'}",
+                    ""
+                ]
+                context_parts.extend(target_info)
+        
+        if target_count > 10:
+            context_parts.append(f"... and {target_count - 10} more targets")
+        
+        return "\n".join(context_parts)
+
+    @staticmethod
+    def _get_resources_context(facility_data: Optional[Dict] = None) -> str:
+        """
+        Get facility resources and consumption context from facility data
+        
+        Args:
+            facility_data: Facility data that may contain resources information
+            
+        Returns:
+            str: Formatted resources context or empty string
+        """
+        if not facility_data or "facility_resources" not in facility_data:
+            return ""
+        
+        resources = facility_data.get("facility_resources", [])
+        resource_count = facility_data.get("resource_count", len(resources))
+        consumption_summary = facility_data.get("consumption_summary", {})
+        
+        if not resources or resource_count == 0:
+            return "FACILITY RESOURCES:\n- No resources configured"
+        
+        context_parts = [
+            "FACILITY RESOURCES & CONSUMPTION:",
+            f"- Total Configured Resources: {resource_count}",
+            ""
+        ]
+        
+        # Group resources by scope for better presentation
+        resources_by_scope = {}
+        for resource in resources:
+            scope = resource.get("resource", {}).get("scope", "unknown")
+            if scope not in resources_by_scope:
+                resources_by_scope[scope] = []
+            resources_by_scope[scope].append(resource)
+        
+        for scope, scope_resources in resources_by_scope.items():
+            context_parts.append(f"{scope.upper()} SCOPE RESOURCES:")
+            
+            for resource in scope_resources[:5]:  # Show first 5 resources per scope
+                resource_info = resource.get("resource", {})
+                recent_consumption = resource.get("recentConsumption", [])
+                
+                resource_line = f"  • {resource_info.get('name', 'Unnamed Resource')} ({resource_info.get('category', 'N/A')})"
+                context_parts.append(resource_line)
+                
+                if recent_consumption:
+                    latest = recent_consumption[0]
+                    consumption_value = latest.get('consumption', 0)
+                    consumption_unit = latest.get('consumption_unit', '')
+                    month_year = f"{latest.get('month', 'N/A')}/{latest.get('year', 'N/A')}"
+                    
+                    context_parts.append(f"    - Latest Consumption: {consumption_value} {consumption_unit} ({month_year})")
+                    context_parts.append(f"    - Emissions: {latest.get('total_emissions', 'N/A')} kgCO2e")
+                else:
+                    context_parts.append("    - No recent consumption data")
+                
+                context_parts.append("")
+            
+            if len(scope_resources) > 5:
+                context_parts.append(f"    ... and {len(scope_resources) - 5} more {scope} resources")
+                context_parts.append("")
+        
+        # Add consumption summary
+        if consumption_summary:
+            context_parts.extend(["CURRENT CONSUMPTION SUMMARY:"])
+            for scope, categories in consumption_summary.items():
+                context_parts.append(f"  {scope.upper()}:")
+                for category, data in categories.items():
+                    month_year = f"{data.get('month', 'N/A')}/{data.get('year', 'N/A')}"
+                    context_parts.append(f"    - {category}: {data.get('value', 0)} {data.get('unit', '')} ({month_year})")
+            context_parts.append("")
+        
+        return "\n".join(context_parts)
 
     @staticmethod
     def get_complete_system_prompt(facility_data: Optional[Dict] = None) -> str:

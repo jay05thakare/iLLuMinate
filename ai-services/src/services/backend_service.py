@@ -38,7 +38,8 @@ class BackendService:
                 timeout=httpx.Timeout(self.timeout),
                 headers={
                     "Content-Type": "application/json",
-                    "User-Agent": "iLLuMinate-AI-Service/1.0.0"
+                    "User-Agent": "iLLuMinate-AI-Service/1.0.0",
+                    "X-API-Key": settings.backend_api_key
                 }
             )
             logger.info(f"Backend service initialized for {self.base_url}")
@@ -93,6 +94,64 @@ class BackendService:
                 "timestamp": datetime.utcnow().isoformat() + "Z"
             }
     
+    async def get_organization_facilities(self, organization_id: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
+        """
+        Get all facilities for an organization
+        
+        Args:
+            organization_id: Organization ID
+            
+        Returns:
+            List of facilities or None
+        """
+        try:
+            if not self.client:
+                logger.warning("Backend client not available")
+                return None
+            
+            if not organization_id:
+                logger.warning("No organization_id provided for facilities lookup")
+                return None
+            
+            # Use the AI service endpoint with API key authentication
+            url = f"/api/organizations/{organization_id}/facilities/ai"
+            
+            # Add API key header for AI service authentication
+            headers = {
+                "X-API-Key": "ai-service-key-123",  # Should match backend expected key
+                "Content-Type": "application/json"
+            }
+            
+            response = await self.client.get(url, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            if data.get("success"):
+                facilities = data.get("data", [])
+                logger.debug(f"Retrieved {len(facilities)} facilities for organization {organization_id}")
+                return facilities
+            else:
+                logger.warning(f"Backend returned unsuccessful response for organization facilities {organization_id}")
+                return None
+                
+        except HTTPStatusError as e:
+            if e.response.status_code == 404:
+                logger.info(f"No facilities found for organization {organization_id}")
+                return []
+            elif e.response.status_code == 401:
+                logger.error(f"Authentication failed for AI service accessing organization {organization_id}")
+                return None
+            else:
+                logger.error(f"HTTP error getting organization facilities {organization_id}: {e.response.status_code}")
+            return None
+        except RequestError as e:
+            logger.error(f"Request error getting organization facilities {organization_id}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error getting organization facilities {organization_id}: {e}")
+            return None
+
     async def get_facility(self, facility_id: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
         Get facility information from backend
@@ -408,6 +467,120 @@ class BackendService:
             logger.error(f"Unexpected error saving chat history: {e}")
             return False
     
+    async def get_targets(
+        self, 
+        organization_id: str,
+        facility_id: Optional[str] = None
+    ) -> Optional[List[Dict[str, Any]]]:
+        """
+        Get sustainability targets from backend for AI service
+        
+        Args:
+            organization_id: Organization ID (required)
+            facility_id: Optional facility ID to filter targets
+            
+        Returns:
+            List of targets data or None
+        """
+        try:
+            if not self.client:
+                logger.warning("Backend client not available")
+                return None
+            
+            if not organization_id:
+                logger.warning("Organization ID is required for targets")
+                return None
+            
+            url = f"/api/targets/ai/{organization_id}"
+            params = {}
+            
+            if facility_id:
+                params["facilityId"] = facility_id
+            
+            response = await self.client.get(url, params=params)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            if data.get("success") and data.get("data", {}).get("targets"):
+                targets = data["data"]["targets"]
+                logger.debug(f"Retrieved {len(targets)} targets from backend for organization {organization_id}")
+                return targets
+            else:
+                logger.info(f"No targets found for organization {organization_id}")
+                return []
+                
+        except HTTPStatusError as e:
+            if e.response.status_code == 404:
+                logger.info(f"No targets found for organization {organization_id}")
+                return []
+            elif e.response.status_code == 401:
+                logger.warning("Authentication failed for targets endpoint")
+                return None
+            else:
+                logger.error(f"HTTP error getting targets: {e.response.status_code}")
+                return None
+        except RequestError as e:
+            logger.error(f"Request error getting targets: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error getting targets: {e}")
+            return None
+
+    async def get_facility_resources(
+        self, 
+        facility_id: str
+    ) -> Optional[List[Dict[str, Any]]]:
+        """
+        Get facility resources and consumption data from backend for AI service
+        
+        Args:
+            facility_id: Facility ID (required)
+            
+        Returns:
+            List of facility resources with consumption data or None
+        """
+        try:
+            if not self.client:
+                logger.warning("Backend client not available")
+                return None
+            
+            if not facility_id:
+                logger.warning("Facility ID is required for resources")
+                return None
+            
+            url = f"/api/facilities/{facility_id}/resources/ai"
+            
+            response = await self.client.get(url)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            if data.get("success") and data.get("data", {}).get("resources"):
+                resources = data["data"]["resources"]
+                logger.debug(f"Retrieved {len(resources)} resources for facility {facility_id}")
+                return resources
+            else:
+                logger.info(f"No resources found for facility {facility_id}")
+                return []
+                
+        except HTTPStatusError as e:
+            if e.response.status_code == 404:
+                logger.info(f"No resources found for facility {facility_id}")
+                return []
+            elif e.response.status_code == 401:
+                logger.warning("Authentication failed for facility resources endpoint")
+                return None
+            else:
+                logger.error(f"HTTP error getting facility resources: {e.response.status_code}")
+                return None
+        except RequestError as e:
+            logger.error(f"Request error getting facility resources: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error getting facility resources: {e}")
+            return None
+
     async def close(self):
         """Close the HTTP client"""
         if self.client:

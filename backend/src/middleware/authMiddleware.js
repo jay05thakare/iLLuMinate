@@ -247,10 +247,45 @@ const requireSameOrganization = (req, res, next) => {
   next();
 };
 
+/**
+ * Authenticate API Key for AI service
+ */
+const authenticateApiKey = (req, res, next) => {
+  try {
+    const apiKey = req.headers['x-api-key'];
+
+    if (!apiKey) {
+      return res.status(401).json({
+        success: false,
+        message: 'API key is required'
+      });
+    }
+
+    // Check if API key matches the configured key
+    if (apiKey !== config.ai.apiKey) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid API key'
+      });
+    }
+
+    // API key is valid, proceed
+    next();
+
+  } catch (error) {
+    logger.error('API key authentication error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   authenticateToken,
   optionalAuth,
   requireAdmin,
   requireRole,
-  requireSameOrganization
+  requireSameOrganization,
+  authenticateApiKey
 };

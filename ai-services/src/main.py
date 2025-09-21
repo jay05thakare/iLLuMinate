@@ -18,7 +18,7 @@ import uvicorn
 from .config.settings import get_settings
 from .utils.logger import setup_logger
 from .routers import health, recommendations, chat
-from .middleware.auth import AuthMiddleware
+from .middleware.auth_middleware import AuthMiddleware
 from .middleware.error_handler import ErrorHandlerMiddleware
 
 # Initialize settings and logger

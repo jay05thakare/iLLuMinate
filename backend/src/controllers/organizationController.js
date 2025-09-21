@@ -782,11 +782,227 @@ const getOrganizationDashboard = async (req, res) => {
   }
 };
 
+/**
+ * Get organization facilities
+ * GET /api/organizations/:id/facilities
+ */
+const getOrganizationFacilities = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Ensure user belongs to this organization
+    const userCheck = await query(`
+      SELECT 1 FROM users 
+      WHERE id = $1 AND organization_id = $2 AND status = 'active'
+    `, [userId, id]);
+
+    if (userCheck.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied to this organization'
+      });
+    }
+
+    // Get facilities for the organization
+    const facilitiesResult = await query(`
+      SELECT 
+        f.id,
+        f.name,
+        f.description,
+        f.location,
+        f.status,
+        f.created_at,
+        f.updated_at,
+        COUNT(DISTINCT ed.id) as emission_data_count,
+        COUNT(DISTINCT pd.id) as production_data_count
+      FROM facilities f
+      LEFT JOIN emission_data ed ON f.id = ed.facility_id
+      LEFT JOIN production_data pd ON f.id = pd.facility_id
+      WHERE f.organization_id = $1
+      GROUP BY f.id, f.name, f.description, f.location, f.status, f.created_at, f.updated_at
+      ORDER BY f.created_at ASC
+    `, [id]);
+
+    // Transform facilities data to match AI service expectations
+    const facilities = facilitiesResult.rows.map(facility => {
+      const location = facility.location || {};
+      
+      return {
+        id: facility.id,
+        name: facility.name,
+        description: facility.description,
+        facility_type: 'Cement Manufacturing', // Default for JK Cement
+        location: {
+          address: location.address || '',
+          city: location.city || '',
+          state: location.state || '',
+          country: location.country || '',
+          latitude: location.latitude || null,
+          longitude: location.longitude || null
+        },
+        annual_production_capacity_tons: location.capacity_mtpa ? Math.round(location.capacity_mtpa * 1000000) : null,
+        daily_capacity_tons: location.capacity_tpd || null,
+        technology: location.technology || 'Dry Process Kiln',
+        commissioned_year: location.commissioned_year || null,
+        primary_fuel: 'Coal', // Default, could be enhanced with actual data
+        alternative_fuel_rate_percent: null, // Could be calculated from emission data
+        clinker_to_cement_ratio_percent: null, // Could be calculated from production data
+        status: facility.status,
+        data_availability: {
+          emission_records: parseInt(facility.emission_data_count) || 0,
+          production_records: parseInt(facility.production_data_count) || 0,
+          has_data: (parseInt(facility.emission_data_count) > 0) || (parseInt(facility.production_data_count) > 0)
+        },
+        created_at: facility.created_at,
+        updated_at: facility.updated_at
+      };
+    });
+
+    logger.info(`Retrieved ${facilities.length} facilities for organization ${id}`, {
+      organizationId: id,
+      facilityCount: facilities.length,
+      activeFacilities: facilities.filter(f => f.status === 'active').length
+    });
+
+    res.json({
+      success: true,
+      data: facilities,
+      meta: {
+        total: facilities.length,
+        active: facilities.filter(f => f.status === 'active').length,
+        with_data: facilities.filter(f => f.data_availability.has_data).length
+      }
+    });
+
+  } catch (error) {
+    logger.error('Get organization facilities error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+/**
+ * Get organization facilities for AI service
+ * GET /api/organizations/:id/facilities/ai
+ */
+const getOrganizationFacilitiesForAI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Simple API key authentication for AI service
+    const apiKey = req.headers['x-api-key'] || req.headers['authorization']?.replace('Bearer ', '');
+    const expectedApiKey = process.env.AI_SERVICE_API_KEY || 'ai-service-key-123'; // Should be in environment variable
+    
+    if (!apiKey || apiKey !== expectedApiKey) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid API key for AI service'
+      });
+    }
+
+    // Get facilities for the organization (without user authentication)
+    const facilitiesResult = await query(`
+      SELECT 
+        f.id,
+        f.name,
+        f.description,
+        f.location,
+        f.status,
+        f.created_at,
+        f.updated_at,
+        COUNT(DISTINCT ed.id) as emission_data_count,
+        COUNT(DISTINCT pd.id) as production_data_count
+      FROM facilities f
+      LEFT JOIN emission_data ed ON f.id = ed.facility_id
+      LEFT JOIN production_data pd ON f.id = pd.facility_id
+      WHERE f.organization_id = $1
+      GROUP BY f.id, f.name, f.description, f.location, f.status, f.created_at, f.updated_at
+      ORDER BY f.created_at ASC
+    `, [id]);
+
+    // Check if organization exists
+    if (facilitiesResult.rows.length === 0) {
+      // Verify organization exists
+      const orgCheck = await query(`SELECT organization_id FROM organizations WHERE organization_id = $1`, [id]);
+      if (orgCheck.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Organization not found'
+        });
+      }
+    }
+
+    // Transform facilities data to match AI service expectations
+    const facilities = facilitiesResult.rows.map(facility => {
+      const location = facility.location || {};
+      
+      return {
+        id: facility.id,
+        name: facility.name,
+        description: facility.description,
+        facility_type: 'Cement Manufacturing', // Default for JK Cement
+        location: {
+          address: location.address || '',
+          city: location.city || '',
+          state: location.state || '',
+          country: location.country || '',
+          latitude: location.latitude || null,
+          longitude: location.longitude || null
+        },
+        annual_production_capacity_tons: location.capacity_mtpa ? Math.round(location.capacity_mtpa * 1000000) : null,
+        daily_capacity_tons: location.capacity_tpd || null,
+        technology: location.technology || 'Dry Process Kiln',
+        commissioned_year: location.commissioned_year || null,
+        primary_fuel: 'Coal', // Default, could be enhanced with actual data
+        alternative_fuel_rate_percent: null, // Could be calculated from emission data
+        clinker_to_cement_ratio_percent: null, // Could be calculated from production data
+        status: facility.status,
+        data_availability: {
+          emission_records: parseInt(facility.emission_data_count) || 0,
+          production_records: parseInt(facility.production_data_count) || 0,
+          has_data: (parseInt(facility.emission_data_count) > 0) || (parseInt(facility.production_data_count) > 0)
+        },
+        created_at: facility.created_at,
+        updated_at: facility.updated_at
+      };
+    });
+
+    logger.info(`AI Service: Retrieved ${facilities.length} facilities for organization ${id}`, {
+      organizationId: id,
+      facilityCount: facilities.length,
+      activeFacilities: facilities.filter(f => f.status === 'active').length,
+      requestSource: 'AI_SERVICE'
+    });
+
+    res.json({
+      success: true,
+      data: facilities,
+      meta: {
+        total: facilities.length,
+        active: facilities.filter(f => f.status === 'active').length,
+        with_data: facilities.filter(f => f.data_availability.has_data).length
+      }
+    });
+
+  } catch (error) {
+    logger.error('Get organization facilities for AI error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   getOrganization,
   updateOrganization,
   getOrganizationStats,
   getOrganizationUsers,
   getOrganizationEmissionAnalytics,
-  getOrganizationDashboard
+  getOrganizationDashboard,
+  getOrganizationFacilities,
+  getOrganizationFacilitiesForAI
 };

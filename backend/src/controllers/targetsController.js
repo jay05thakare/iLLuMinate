@@ -185,7 +185,97 @@ const getTarget = async (req, res) => {
   }
 };
 
+/**
+ * Get targets for AI service (API key authentication)
+ * GET /api/targets/ai/:organizationId
+ */
+const getTargetsForAI = async (req, res) => {
+  try {
+    const { organizationId } = req.params;
+    const { facilityId, status } = req.query;
+
+    // Build WHERE clause for filters
+    let whereConditions = ['st.organization_id = $1'];
+    let params = [organizationId];
+    let paramIndex = 2;
+
+    if (status) {
+      whereConditions.push(`st.status = $${paramIndex}`);
+      params.push(status);
+      paramIndex++;
+    }
+
+    if (facilityId) {
+      whereConditions.push(`st.facility_id = $${paramIndex}`);
+      params.push(facilityId);
+      paramIndex++;
+    }
+
+    // Get targets with facility information (no pagination for AI service)
+    const targetsResult = await query(`
+      SELECT 
+        st.id,
+        st.name,
+        st.description,
+        st.target_type,
+        st.baseline_value,
+        st.target_value,
+        st.baseline_year,
+        st.target_year,
+        st.unit,
+        st.status,
+        st.created_at,
+        st.updated_at,
+        f.name as facility_name,
+        f.id as facility_id
+      FROM sustainability_targets st
+      LEFT JOIN facilities f ON st.facility_id = f.id
+      WHERE ${whereConditions.join(' AND ')}
+      ORDER BY st.created_at DESC
+    `, params);
+
+    const targets = targetsResult.rows.map(target => ({
+      id: target.id,
+      name: target.name,
+      description: target.description,
+      targetType: target.target_type,
+      baselineValue: parseFloat(target.baseline_value),
+      targetValue: parseFloat(target.target_value),
+      baselineYear: target.baseline_year,
+      targetYear: target.target_year,
+      unit: target.unit,
+      status: target.status,
+      facility: target.facility_id ? {
+        id: target.facility_id,
+        name: target.facility_name
+      } : null,
+      createdAt: target.created_at,
+      updatedAt: target.updated_at
+    }));
+
+    logger.info(`AI service retrieved ${targets.length} targets for organization ${organizationId}`);
+
+    res.json({
+      success: true,
+      data: {
+        targets,
+        organizationId,
+        totalTargets: targets.length
+      }
+    });
+
+  } catch (error) {
+    logger.error('Get targets for AI error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get targets for AI service',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
   getTargets,
-  getTarget
+  getTarget,
+  getTargetsForAI
 };

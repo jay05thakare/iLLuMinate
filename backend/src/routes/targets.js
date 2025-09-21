@@ -29,6 +29,25 @@ router.get('/',
 );
 
 /**
+ * @route   GET /api/targets/ai/:organizationId
+ * @desc    Get targets for AI service (API key authentication)
+ * @access  Private (AI service only)
+ */
+router.get('/ai/:organizationId',
+  require('../middleware/authMiddleware').authenticateApiKey,
+  validate({
+    params: Joi.object({
+      organizationId: Joi.string().uuid().required()
+    }),
+    query: Joi.object({
+      facilityId: Joi.string().uuid().optional(),
+      status: Joi.string().valid('active', 'achieved', 'cancelled').optional()
+    })
+  }),
+  targetsController.getTargetsForAI
+);
+
+/**
  * @route   GET /api/targets/:id
  * @desc    Get target by ID
  * @access  Private (Organization members only)

@@ -86,7 +86,7 @@ dev:
 	@echo "This will start backend (port 3000), frontend (port 5173), and AI services (port 8000)"
 	@(cd backend && npm run dev) & \
 	(cd frontend && npm run dev) & \
-	(cd ai-services && python3 simple_main.py) & \
+	(cd ai-services && source venv/bin/activate && python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload) & \
 	wait
 
 dev-backend:
@@ -99,7 +99,7 @@ dev-frontend:
 
 dev-ai:
 	@echo "🤖 Starting AI services development server..."
-	@cd ai-services && python3 simple_main.py
+	@cd ai-services && source venv/bin/activate && python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Testing Commands
 test:
@@ -310,14 +310,14 @@ start-all:
 	@echo "🚀 Starting all services in background..."
 	@cd backend && npm start > /dev/null 2>&1 & echo "Backend started (PID: $$!)"
 	@cd frontend && npm run dev > /dev/null 2>&1 & echo "Frontend started (PID: $$!)"  
-	@cd ai-services && python3 simple_main.py > /dev/null 2>&1 & echo "AI Services started (PID: $$!)"
+	@cd ai-services && source venv/bin/activate && python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 > /dev/null 2>&1 & echo "AI Services started (PID: $$!)"
 	@echo "All services started. Use 'make test-health' to verify."
 
 stop-all:
 	@echo "🛑 Stopping all services..."
 	@pkill -f "node.*src/server.js" || echo "No backend process found"
 	@pkill -f "vite" || echo "No frontend process found"
-	@pkill -f "simple_main.py" || echo "No AI services process found"
+	@pkill -f "uvicorn" || echo "No AI services process found"
 	@echo "All services stopped."
 
 # Help target (also default)

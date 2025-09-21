@@ -413,9 +413,9 @@ class ApiService {
   async chatWithCementGPT(message, options = {}) {
     const payload = {
       message,
-      user_id: options.userId || null,
       facility_id: options.facilityId || null,
       session_id: options.sessionId || null,
+      // Note: user_id and organization_id are now extracted from JWT token on backend
     };
 
     return this.aiRequest('/chat/cement-gpt', {
@@ -424,12 +424,12 @@ class ApiService {
     });
   }
 
-  async createChatSession(userId = null, facilityId = null) {
+  async createChatSession(facilityId = null) {
     return this.aiRequest('/chat/sessions', {
       method: 'POST',
       body: JSON.stringify({
-        user_id: userId,
         facility_id: facilityId,
+        // Note: user_id and organization_id are now extracted from JWT token on backend
       }),
     });
   }
