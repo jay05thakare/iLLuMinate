@@ -1,0 +1,549 @@
+source,version,published_year,scope,activity_type,name,is_renewable,is_biofuel,is_refrigerant,kgco2e,unit_name,heat_content,biogenic_kgco2e,cost_inr
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Asphalt and Road Oil,False,False,False,3.15560755189492,L,44.0371706969117,,35.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Mixed (Commercial Sector),False,False,False,2.23999885624178,kg,24.87657,,12.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Mixed (Electric Power Sector),False,False,False,2.09334645554113,kg,22.94599,,10.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Mixed (Industrial Coking),False,False,False,2.74136992207342,kg,30.56364,,12.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Mixed (Industrial Sector),False,False,False,2.35038642735547,kg,25.99305,,12.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Coal Coke,False,False,False,3.12744414109082,kg,28.8424,,15.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Municipal Solid Waste,False,False,False,1.01683208427867,kg,11.57185,,2.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Petroleum Coke (Solid),False,False,False,3.45306734326241,kg,34.89,,95.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Plastics,False,False,False,3.22573988623309,kg,44.194,,65.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Tires,False,False,False,2.71544691106687,kg,32.564,,45.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Agricultural Byproducts (Non Biogenic),False,False,False,1.09291603604355,kg,9.59475,,8.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Peat (Non Biogenic),False,False,False,1.00397632349945,kg,9.304,,15.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Solid Byproducts (Non Biogenic),False,False,False,1.23141666823011,kg,12.08357,,5.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Wood and Wood Residuals (Non Biogenic),False,False,False,1.82964264588489,kg,20.32924,,25.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Aviation Gasoline,False,False,False,2.20297301447083,L,33.4459524280341,,95.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Butane,False,False,False,1.76898561878518,L,28.7077758340626,,58.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Butylene,False,False,False,1.91290021293271,L,29.2652083745299,,50.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Crude Oil,False,False,False,2.72626984850774,L,38.4628452922392,,75.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Distillate Fuel Oil No. 1,False,False,False,2.69865673636172,L,38.7415615624728,,87.5
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Distillate Fuel Oil No. 2,False,False,False,2.70512551741465,L,38.4628452922392,,87.5
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Distillate Fuel Oil No. 4,False,False,False,2.90359903724926,L,40.6925754541082,,87.5
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Ethane,False,False,False,1.07500167392621,L,18.952706375886,,50.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Ethylene,False,False,False,1.01436097924332,L,16.1655436735499,,50.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Heavy Gas Oils,False,False,False,2.93868267087181,L,41.2500079945754,,75.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Isobutane,False,False,False,1.70473316379863,L,27.5929107531282,,58.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Isobutylene,False,False,False,1.88027337939969,L,28.7077758340626,,50.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Kerosene,False,False,False,2.69054084256059,L,37.6266964815384,,45.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Kerosene-Type Jet Fuel,False,False,False,2.58426442578461,L,37.6266964815384,,95.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Liquefied Petroleum Gases (LPG),False,False,False,1.50569510828753,L,25.6418968614928,,95.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Lubricants,False,False,False,2.83453231077545,L,40.1351429136409,,50.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Motor Gasoline,False,False,False,2.32679441812272,L,34.8395337792022,,95.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Naphtha (<401 deg F),False,False,False,2.25414710364747,L,34.8395337792022,,50.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Natural Gasoline,False,False,False,1.95052227580905,L,30.6587897256979,,35.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Other Oil (>401 deg F),False,False,False,2.80771488485197,L,38.7415615624728,,75.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Pentanes Plus,False,False,False,2.04176730278998,L,30.6587897256979,,50.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Petrochemical Feedstocks,False,False,False,2.35321162338645,L,34.8395337792022,,120.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Petroleum Coke,False,False,False,3.87788168187082,L,39.8564266434073,,95.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Propane,False,False,False,1.51721485898689,L,25.3631805912592,,58.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Propylene,False,False,False,1.63500917725786,L,25.3631805912592,,50.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Residual Fuel Oil No. 5,False,False,False,2.70623662506804,L,39.0202778327065,,65.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Residual Fuel Oil No. 6,False,False,False,2.98552724427777,L,41.8074405350427,,65.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Special Naphtha,False,False,False,2.39680001207161,L,34.8395337792022,,50.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Unfinished Oils,False,False,False,2.74602542712011,L,38.7415615624728,,75.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Used Oil,False,False,False,2.7065837471452,L,38.4628452922392,,75.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Biodiesel (100%) (Non Biogenic),False,False,False,2.49885458960557,L,35.6756825899031,,87.5
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Ethanol (100%) (Non Biogenic),False,False,False,1.52004488135238,L,23.4121666996239,,45.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Vegetable Oil (Non Biogenic),False,False,False,2.58708816085525,L,33.4459524280341,,75.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Aviation Gasoline - Aviation Gasoline Aircraft,False,False,False,2.25519190411565,L,34.997,,95.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Motor Gasoline - Gasoline Motorcycles,False,False,False,2.36843585877994,L,34.981769078784,,95.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Motor Gasoline - Other Gasoline Non-Road Vehicles,False,False,False,2.33853026156113,L,34.981769078784,,95.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Diesel Fuel - Diesel Agricultural Equipment,False,False,False,2.72604952901584,L,38.5959153857992,,87.5
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Motor Gasoline - Gasoline Passenger Cars,False,False,False,2.32798028646701,L,34.981769078784,,95.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,"Motor Gasoline - Gasoline Light-duty Trucks (Vans, Pickup Trucks, SUVs)",False,False,False,2.32886882388262,L,34.981769078784,,95.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Motor Gasoline - Hybrid (Gasoline) Passenger Cars,False,False,False,2.33127080565021,L,34.981769078784,,95.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Motor Gasoline - Gasoline Heavy-duty Vehicles,False,False,False,2.32985324518645,L,34.981769078784,,95.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Motor Gasoline - Gasoline Ships and Boats,False,False,False,2.33956581600747,L,34.981769078784,,95.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Motor Gasoline - Gasoline Agricultural Equipment,False,False,False,2.34415184284126,L,34.981769078784,,95.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Diesel Fuel - Diesel Ships and Boats,False,False,False,2.72914298375222,L,38.5959153857992,,87.5
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Diesel Fuel - Diesel Passenger Cars,False,False,False,2.69885499748722,L,38.5959153857992,,87.5
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Diesel Fuel - Diesel Light-duty Trucks,False,False,False,2.69901762180283,L,38.5959153857992,,87.5
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Diesel Fuel - Diesel Medium- and Heavy-duty Vehicles,False,False,False,2.70048566288342,L,38.5959153857992,,87.5
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Jet Fuel - Jet Fuel Aircraft,False,False,False,2.5966791913983,L,34.997,,95.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Compressed Natural Gas - CNG Light-duty Vehicles,False,False,False,0.1593996199254991,m3,0.029,,35.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Compressed Natural Gas - CNG Medium- and Heavy-duty Vehicles,False,False,False,0.2501610005434323,m3,0.029,,35.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Natural Gas,False,False,False,0.0019244896075398,m3,0.0382276783880349,,35.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Blast Furnace Gas,False,False,False,0.000891339880762,m3,0.003427823013352,,35.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Coke Oven Gas,False,False,False,0.0009918856593304,m3,0.0223181085325856,,35.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Fuel Gas,False,False,False,0.0029038997583862,m3,0.0517154167666593,,35.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Propane Gas,False,False,False,0.0054824165343326,m3,0.0937435076260193,,58.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Landfill Gas (Non Biogenic),False,False,False,0.0008962289166054,m3,0.0180705887116928,,35.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Other Biomass Gases (Non Biogenic),False,False,False,0.0012103710110856,m3,0.0244046094972348,,35.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Electricity - Mobile - Electric Vehicle,False,False,False,0.0,kWh,,,6.5
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Anthracite Coal,False,False,False,2.8879982923875,kg,29.17967,,8.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Bituminous Coal,False,False,False,2.58350813969821,kg,28.99359,,8.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Sub-bituminous Coal,False,False,False,1.86159381384656,kg,20.06175,,8.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Lignite Coal,False,False,False,1.54213674273225,kg,16.5262300000001,,8.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Diesel,False,False,False,2.7244005,L,40.7208464150138,,87.5
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Rendered Animal Fat (Non Biogenic),False,False,False,2.34848789687023,L,34.8395337792022,,50.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Ethanol (100%) - Ethanol Light-duty Vehicles,False,True,False,0.082574636041313,L,23.4121666431437,1.51898930266445,45.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Ethanol (100%) - Ethanol Medium- and Heavy-duty Vehicles,False,True,False,0.120631737453937,L,23.4121666431437,1.51898930266445,45.0
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Biodiesel (100%) - Biodiesel Passenger Cars,False,True,False,0.001658340060431,L,35.6756825038381,2.49642589742245,87.5
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Biodiesel (100%) - Biodiesel Light-duty Vehicles,False,True,False,0.00119400484351,L,35.6756825038381,2.49642589742245,87.5
+GHG Protocol,ar5,2022,Scope 1,Mobile Combustion,Biodiesel (100%) - Biodiesel Medium- and Heavy-duty Vehicles,False,True,False,0.0034057061026,L,35.6756825038381,2.49642589742245,87.5
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Agricultural Byproducts,False,True,False,0.018269983245089,kg,9.59475,1.07464605279846,8.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Peat,False,True,False,0.017716347389177,kg,9.304,0.986259976110269,15.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Solid Byproducts,False,True,False,0.023009106171693,kg,12.08357,1.20840756205842,5.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Wood and Wood Residuals,False,True,False,0.022266565021806,kg,20.32924,1.80737608086309,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HCFC-225ca,False,False,True,127.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-125,False,False,True,3170.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-134,False,False,True,1120.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HCFC-225cb,False,False,True,525.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HCFC-21,False,False,True,148.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Nitrogen trifluoride,False,False,True,16100.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,PFC-9-1-18,False,False,True,7190.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Carbon dioxide,False,False,True,1.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Methane,False,False,True,28.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Nitrous oxide,False,False,True,265.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-23,False,False,True,12400.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-32,False,False,True,677.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-41,False,False,True,116.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-134a,False,False,True,1300.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-143,False,False,True,328.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-143a,False,False,True,4800.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-152a,False,False,True,138.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-227ea,False,False,True,3350.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-236fa,False,False,True,8060.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-245fa,False,False,True,858.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-43-I0mee,False,False,True,1650.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Perfluoromethane (PFC-14),False,False,True,6630.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Perfluoroethane (PFC-116),False,False,True,11100.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Perfluoropropane (PFC-218),False,False,True,8900.0,kg,,,58.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Perfluorocyclobutane (PFC-318),False,False,True,9540.0,kg,,,58.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Perfluorobutane (PFC-3-1-10),False,False,True,9200.0,kg,,,58.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Perfluoropentane (PFC-4-1-12),False,False,True,8550.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Perfluorohexane (PFC-5-1-14),False,False,True,7910.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Sulphur hexafluoride (SF6),False,False,True,23500.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-152,False,False,True,16.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-161,False,False,True,4.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-236cb,False,False,True,1120.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-236ea,False,False,True,1330.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-245ca,False,False,True,716.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFC-365mfc,False,False,True,804.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,R-404A,False,False,True,3943.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,R-407A,False,False,True,1923.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,R-407C,False,False,True,1624.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,R-407F,False,False,True,1674.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,R-408A,False,False,True,2430.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,R-410A,False,False,True,1924.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,R-507A,False,False,True,3985.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,R-403A,False,False,True,1780.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,CFC-13,False,False,True,13900.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,CFC-113,False,False,True,5820.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,CFC-114,False,False,True,8590.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,CFC-115,False,False,True,7670.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Halon-1211,False,False,True,1750.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Halon-1301,False,False,True,6290.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Halon-2402,False,False,True,1470.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Carbon tetrachloride,False,False,True,1730.0,kg,,,120.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Methyl bromide,False,False,True,2.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Methyl chloroform,False,False,True,160.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HCFC-123,False,False,True,79.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HCFC-124,False,False,True,527.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HCFC-141b,False,False,True,782.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HCFC-142b,False,False,True,1980.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Trifluoromethyl sulphur pentafluoride,False,False,True,17400.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-125,False,False,True,12400.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-134,False,False,True,5560.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-143a,False,False,True,523.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HCFE-235da2,False,False,True,491.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-245cb2,False,False,True,654.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-245fa2,False,False,True,812.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-254cb2,False,False,True,301.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-347mcc3,False,False,True,530.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-347pcf2,False,False,True,889.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-356pcc3,False,False,True,413.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-449sl (HFE-7100),False,False,True,421.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-569sf2 (HFE-7200),False,False,True,57.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-43-10pccc124 (H-Galden1040x),False,False,True,2820.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-236ca12 (HG-10),False,False,True,5350.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HFE-338pcc13 (HG-01),False,False,True,2910.0,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,PFPMIE,False,False,True,9710.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Methylene chloride,False,False,True,9.0,kg,,,120.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,Methyl chloride,False,False,True,12.0,kg,,,120.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,CFC-11/R11 (trichlorofluoromethane),False,False,True,4660.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,CFC-12/R12 (dichlorodifluoromethane),False,False,True,10200.0,kg,,,25.0
+GHG Protocol,ar5,2022,Scope 1,Fugitive Emissions,HCFC-22/R22 (chlorodifluoromethane),False,False,True,1760.0,kg,,,25.0
+IPCC,ar6,2023,Scope 1,Fugitive Emissions,R-404A,False,False,True,4562.4,kg,,,250.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Landfill Gas,False,True,False,0.004394089206247,m3,18.070588711693,0.891834827399178,35.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Other Biomass Gases,False,True,False,0.005934285422869,m3,24.404609497235,1.20443672566281,35.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Biodiesel (100%),False,True,False,0.002027150663118,L,35.675682589903,2.49682743894245,87.5
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Ethanol (100%),False,True,False,0.001330317622671,L,23.412166699624,1.51871456372971,45.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Rendered Animal Fat,False,True,False,0.001979639319451,L,34.839533779202,2.34650825755078,50.0
+GHG Protocol,ar5,2022,Scope 1,Stationary Combustion,Vegetable Oil,False,True,False,0.001900453746673,L,33.445952428034,2.58518770710858,75.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,R-407C,False,False,True,1908.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,R-404A,False,False,True,4728.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Nitrogen trifluoride,False,False,True,17200.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFC-245ca,False,False,True,693.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFC-245fa,False,False,True,1030.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFC-32,False,False,True,675.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFC-365mfc,False,False,True,794.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFC-41,False,False,True,92.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFC-43-I0mee,False,False,True,1640.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-125,False,False,True,14900.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-134,False,False,True,6320.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-143a,False,False,True,756.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-236ca12 (HG-10),False,False,True,2800.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-245cb2,False,False,True,708.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-245fa2,False,False,True,659.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-254cb2,False,False,True,359.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-338pcc13 (HG-01),False,False,True,1500.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-347mcc3,False,False,True,575.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-449sl (HFE-7100),False,False,True,297.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-347pcf2,False,False,True,580.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-356pcc3,False,False,True,110.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-43-10pccc124 (H-Galden1040x),False,False,True,1870.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,HFE-569sf2 (HFE-7200),False,False,True,59.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Methane,False,False,True,25.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Methyl bromide,False,False,True,5.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Methyl chloride,False,False,True,13.0,kg,,,120.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Methyl chloroform,False,False,True,146.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Methylene chloride,False,False,True,9.0,kg,,,120.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Nitrous oxide,False,False,True,298.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Perfluorocyclopropane,False,False,True,17340.0,kg,,,58.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Perfluoroethane (PFC-116),False,False,True,12200.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Perfluoromethane (PFC-14),False,False,True,7390.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Perfluoropropane (PFC-218),False,False,True,8830.0,kg,,,58.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Perfluorocyclobutane (PFC-318),False,False,True,10300.0,kg,,,58.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Perfluorobutane (PFC-3-1-10),False,False,True,8860.0,kg,,,58.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Perfluoropentane (PFC-4-1-12),False,False,True,9160.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Perfluorohexane (PFC-5-1-14),False,False,True,9300.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,PFC-9-1-18,False,False,True,7500.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,PFPMIE,False,False,True,10300.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R1234yf,False,False,True,1.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R1234ze,False,False,True,1.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R1270 (propene),False,False,True,2.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R170 (ethane),False,False,True,6.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R290 (propane),False,False,True,3.0,kg,,,58.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-401A,False,False,True,1182.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-401B,False,False,True,1288.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-401C,False,False,True,933.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-402A,False,False,True,2788.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-402B,False,False,True,2416.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-403A,False,False,True,3124.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-403B,False,False,True,4457.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-404A,False,False,True,3922.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R405A,False,False,True,4716.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R406A,False,False,True,1943.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-407A,False,False,True,2107.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-407B,False,False,True,2804.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-407C,False,False,True,1774.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-407D,False,False,True,1627.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-407E,False,False,True,1552.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-407F,False,False,True,1825.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-408A,False,False,True,3152.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R409A,False,False,True,1585.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R409B,False,False,True,1560.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-410A,False,False,True,2088.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-410B,False,False,True,2229.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-411A,False,False,True,1597.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-411B,False,False,True,1705.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-412A,False,False,True,2286.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-413A,False,False,True,2053.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R414A,False,False,True,1478.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R414B,False,False,True,1362.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-415A,False,False,True,1507.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-415B,False,False,True,546.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-416A,False,False,True,1084.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-417A,False,False,True,2346.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-417B,False,False,True,3027.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-417C,False,False,True,1809.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-418A,False,False,True,1741.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-419A,False,False,True,2967.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-419B,False,False,True,2384.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-420A,False,False,True,1536.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-421A,False,False,True,2631.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-421B,False,False,True,3190.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-422A,False,False,True,3143.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-422B,False,False,True,2526.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-422C,False,False,True,3085.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-422D,False,False,True,2729.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-422E,False,False,True,2592.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-423A,False,False,True,2280.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-424A,False,False,True,2440.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-425A,False,False,True,1505.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-426A,False,False,True,1508.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-427A,False,False,True,2138.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-428A,False,False,True,3607.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-429A,False,False,True,14.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-430A,False,False,True,95.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-431A,False,False,True,38.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R432A,False,False,True,2.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R433A,False,False,True,3.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R433B,False,False,True,3.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R433C,False,False,True,3.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-434A,False,False,True,3245.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-435A,False,False,True,26.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R436A,False,False,True,3.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R436B,False,False,True,3.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-437A,False,False,True,1805.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-438A,False,False,True,2265.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-439A,False,False,True,1983.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R440A,False,False,True,144.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R441A,False,False,True,3.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R442A,False,False,True,1888.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R443A,False,False,True,2.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-444A,False,False,True,88.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-445A,False,False,True,130.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-500,False,False,True,8077.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R501,False,False,True,4083.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R502,False,False,True,4657.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-503,False,False,True,14560.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-504,False,False,True,4143.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R505,False,False,True,8502.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R506,False,False,True,4490.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-507A,False,False,True,3985.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-508A,False,False,True,13214.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-508B,False,False,True,13396.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-509A,False,False,True,5741.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R510A,False,False,True,1.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R511A,False,False,True,9.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R-512A,False,False,True,189.0,kg,,,250.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R600 (butane),False,False,True,4.0,kg,,,58.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R600A (isobutane),False,False,True,3.0,kg,,,58.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R601 (pentane),False,False,True,5.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,R601A (isopentane),False,False,True,5.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Sulphur hexafluoride (SF6),False,False,True,22800.0,kg,,,25.0
+DEFRA/BEIS,ar4,2022,Scope 1,Fugitive Emissions,Trifluoromethyl sulphur pentafluoride,False,False,True,17700.0,kg,,,25.0
+IPCC,ar6,2023,Scope 1,Fugitive Emissions,R 125,False,False,True,3740.0,kg,,,25.0
+IPCC,ar6,2023,Scope 1,Fugitive Emissions,R 407A,False,False,True,2262.2,kg,,,25.0
+IPCC,ar6,2023,Scope 1,Fugitive Emissions,R 410A,False,False,True,2255.5,kg,,,25.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-125,False,False,True,3170.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Carbon dioxide,False,False,True,1.0,kg,,,25.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-134,False,False,True,1120.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-134a,False,False,True,1300.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-143,False,False,True,328.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-143a,False,False,True,4800.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-152,False,False,True,16.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-152a,False,False,True,138.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-161,False,False,True,4.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-227ea,False,False,True,3350.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-23,False,False,True,12400.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-236cb,False,False,True,1210.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-236ea,False,False,True,1330.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-236fa,False,False,True,8060.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-245ca,False,False,True,716.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-245fa,False,False,True,858.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-32,False,False,True,677.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-365mfc,False,False,True,804.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-41,False,False,True,116.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HFC-43-I0mee,False,False,True,1650.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Methane,False,False,True,28.0,kg,,,25.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Nitrogen trifluoride,False,False,True,16100.0,kg,,,25.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Nitrous oxide,False,False,True,265.0,kg,,,25.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Perfluoroethane (PFC-116),False,False,True,11100.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Perfluorocyclopropane,False,False,True,9200.0,kg,,,58.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Perfluoromethane (PFC-14),False,False,True,6630.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Perfluoropropane (PFC-218),False,False,True,8900.0,kg,,,58.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Perfluorocyclobutane (PFC-318),False,False,True,9540.0,kg,,,58.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Perfluorobutane (PFC-3-1-10),False,False,True,9200.0,kg,,,58.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Perfluoropentane (PFC-4-1-12),False,False,True,8550.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Perfluorohexane (PFC-5-1-14),False,False,True,7910.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,PFC-9-1-18,False,False,True,7190.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-401A,False,False,True,18.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-401B,False,False,True,15.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-401C,False,False,True,21.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-402A,False,False,True,1902.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-402B,False,False,True,1205.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-403A,False,False,True,1780.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-403B,False,False,True,3471.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-404A,False,False,True,3943.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R405A,False,False,True,3920.0,kg,,,25.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-407A,False,False,True,1923.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-407B,False,False,True,2547.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-407C,False,False,True,1624.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-407D,False,False,True,1487.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-407E,False,False,True,1425.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-407F,False,False,True,1674.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-408A,False,False,True,2430.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-410A,False,False,True,1924.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-410B,False,False,True,2048.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-411A,False,False,True,15.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-411B,False,False,True,4.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-412A,False,False,True,445.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-413A,False,False,True,1945.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-415A,False,False,True,25.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-415B,False,False,True,104.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-416A,False,False,True,767.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-417A,False,False,True,2127.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-417B,False,False,True,2742.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-417C,False,False,True,1643.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-418A,False,False,True,3.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-419A,False,False,True,2688.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-419B,False,False,True,2161.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-420A,False,False,True,1144.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-421A,False,False,True,2385.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-421B,False,False,True,2890.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-422A,False,False,True,2847.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-422B,False,False,True,2290.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-434A,False,False,True,3075.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-422C,False,False,True,2794.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-422D,False,False,True,2473.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-422E,False,False,True,2350.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-423A,False,False,True,2274.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-424A,False,False,True,2212.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-425A,False,False,True,1431.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-437A,False,False,True,1639.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-426A,False,False,True,1371.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-427A,False,False,True,2024.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-428A,False,False,True,3417.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-429A,False,False,True,13.8,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-430A,False,False,True,105.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-431A,False,False,True,40.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-435A,False,False,True,27.6,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-438A,False,False,True,2059.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-439A,False,False,True,1828.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R440A,False,False,True,156.0,kg,,,25.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R442A,False,False,True,1754.0,kg,,,25.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-444A,False,False,True,88.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-445A,False,False,True,117.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-500,False,False,True,36.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-503,False,False,True,4972.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-504,False,False,True,326.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-507A,False,False,True,3985.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-508A,False,False,True,11607.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-508B,False,False,True,11698.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-509A,False,False,True,4984.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R511A,False,False,True,6.9,kg,,,25.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-512A,False,False,True,196.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,Sulphur hexafluoride (SF6),False,False,True,23500.0,kg,,,25.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,HCFC-22/R22 (chlorodifluoromethane),False,False,True,1760.0,kg,,,25.0
+CEA,ar5,2023,Scope 2,Purchased Electricity,Electricity supplied from grid,False,False,False,0.716,kWh,,,6.5
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Butane,False,False,False,1.74532963221477,L,,,58.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Coal (electricity generation - home produced coal only),False,False,False,2.19589669798658,t,,,8.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Petroleum coke,False,False,False,3.38657167516779,t,,,95.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Coking coal,False,False,False,3.16465001879195,t,,,8.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Coal (domestic),False,False,False,2.90495233557047,t,,,8.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Coal (electricity generation),False,False,False,2.19933448322148,t,,,8.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Coal (industrial),False,False,False,2.39647994362416,t,,,8.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Marine fuel oil,False,False,False,3.10202288590604,L,,,70.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Marine gas oil,False,False,False,2.77138877315436,L,,,75.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Waste oils,False,False,False,2.74923668456376,L,,,5.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Refinery miscellaneous,False,False,False,2.94432092751678,t,,,8.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Processed fuel oils - distillate oil,False,False,False,2.75540897852349,L,,,87.5
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Processed fuel oils - residual oil,False,False,False,3.17492498255034,L,38.8277566744,,65.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Petrol (100% mineral petrol),False,False,False,2.34502534630872,L,33.0186761168,,95.0
+DEFRA/BEIS,ar5,2023,Scope 1,Mobile Combustion,Petrol (average biofuel blend),False,False,False,2.09747312751678,L,33.0186761168,,95.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Petrol (average biofuel blend),False,False,False,2.09747312751678,L,33.0186761168,,95.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Naphtha,False,False,False,2.11893915436242,L,32.4120238715,,50.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Lubricants,False,False,False,2.74933914899329,L,36.1070361156,,50.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Gas oil,False,False,False,2.75540897852349,L,39.271062532,,75.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Fuel oil,False,False,False,3.17492498255034,L,,,70.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Diesel (100% mineral diesel),False,False,False,2.65937173691275,L,39.271062532,,87.5
+DEFRA/BEIS,ar5,2023,Scope 1,Mobile Combustion,Diesel (average biofuel blend),False,False,False,2.51206388456376,L,39.271062532,,87.5
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Diesel (average biofuel blend),False,False,False,2.51206388456376,L,39.271062532,,87.5
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Burning oil,False,False,False,2.54015585637584,L,,,75.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Aviation turbine fuel,False,False,False,2.5426884,L,31.207525283,,75.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Aviation spirit,False,False,False,2.33116264295302,L,,,50.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Propane,False,False,False,1.54357759865772,L,,,58.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Other petroleum gas,False,False,False,0.94441512348993,L,,,95.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Natural gas (100% mineral blend),False,False,False,0.0020538303100671,m3,0.0336,,35.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,Natural gas,False,False,False,0.0020383903100671,m3,0.0336,,35.0
+DEFRA/BEIS,ar5,2023,Scope 1,Mobile Combustion,LPG,False,False,False,1.55712778389262,L,23.3447854900593,,60.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,LPG,False,False,False,1.55712778389262,L,23.3447854900593,,60.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,LNG,False,False,False,1.16832964966443,L,,,50.0
+DEFRA/BEIS,ar5,2023,Scope 1,Stationary Combustion,CNG,False,False,False,0.44844653020134,L,,,77.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,CNG,False,False,False,0.44942,L,,,77.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Coal (domestic),False,False,False,2.90495234,t,,,8.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Aviation spirit,False,False,False,2.33116,L,,,50.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Aviation turbine fuel,False,False,False,2.54269,L,,,75.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Burning oil,False,False,False,2.54015,L,,,75.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Butane,False,False,False,1.74532,L,,,58.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Coal (electricity generation - home produced coal only),False,False,False,2.2585867,t,,,8.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Coal (electricity generation),False,False,False,2.26211448,t,,,8.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Coal (industrial),False,False,False,2.39943994,t,,,8.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Coking coal,False,False,False,3.16465002,t,,,8.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Fuel oil,False,False,False,3.17493,L,,,70.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Gas oil,False,False,False,2.75541,L,,,75.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,LNG,False,False,False,1.17216,L,,,50.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Lubricants,False,False,False,2.74934,L,,,50.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Marine fuel oil,False,False,False,3.10202,L,,,70.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Marine gas oil,False,False,False,2.77139,L,,,75.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Naphtha,False,False,False,2.11894,L,,,50.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Other petroleum gas,False,False,False,0.94441,L,,,95.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Petrol (100% mineral petrol),False,False,False,2.35372,L,,,95.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Petroleum coke,False,False,False,3.38657168,t,,,95.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Processed fuel oils - distillate oil,False,False,False,2.75541,L,,,87.5
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Processed fuel oils - residual oil,False,False,False,3.17493,L,,,65.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Propane,False,False,False,1.54357,L,,,58.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Refinery miscellaneous,False,False,False,2.94432093,t,,,8.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Waste oils,False,False,False,2.74923,L,,,5.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Diesel (100% mineral diesel),False,False,False,2.66155,L,39.271062532,,87.5
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Diesel (average biofuel blend),False,False,False,2.51279,L,39.271062532,,87.5
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Petrol (average biofuel blend),False,False,False,2.0844,L,33.0186761168,,95.0
+DEFRA/BEIS,ar5,2024,Scope 1,Mobile Combustion,Petrol (average biofuel blend),False,False,False,2.0844,L,33.0186761168,,95.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,LPG,False,False,False,1.55713,L,23.344785490059,,60.0
+DEFRA/BEIS,ar5,2024,Scope 1,Mobile Combustion,LPG,False,False,False,1.55713,L,23.344785490059,,60.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Natural gas,False,False,False,0.00204542,m3,33.6,,35.0
+DEFRA/BEIS,ar5,2024,Scope 1,Stationary Combustion,Natural gas (100% mineral blend),False,False,False,0.00206318,m3,33.6,,35.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,R-410A,False,False,True,2256.0,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R-600,False,False,True,0.006,kg,,,250.0
+DEFRA/BEIS,ar5,2024,Scope 1,Mobile Combustion,Diesel (average biofuel blend),False,False,False,2.51279,L,39.271062532,,87.5
+DEFRA/BEIS,ar5,2024,Scope 1,Fugitive Emissions,R290 = propane,False,False,True,0.06,kg,,,58.0
+CEA,ar5,2024,Scope 2,Purchased Electricity,Electricity supplied from grid,False,False,False,0.727,kWh,,,6.5
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-245fa,False,False,True,962.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,PFC-14,False,False,False,7380.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-236fa,False,False,True,8690.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-245ca,False,False,True,787.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-32,False,False,True,771.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-365mfc,False,False,True,914.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-41,False,False,True,135.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-43-10mee,False,False,False,1600.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFE-125,False,False,True,14300.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFE-134,False,False,True,6630.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFE-143a,False,False,True,616.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFE-245cb2,False,False,True,747.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFE-245fa2,False,False,True,878.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFE-347mcc3,False,False,True,576.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFE-347pcf2,False,False,True,980.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFE-356pcc3,False,False,True,277.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFE-356pcf3,False,False,False,484.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFE-374pc2,False,False,False,12.5,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Methane,False,False,True,27.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Methyl bromide,False,False,True,2.43,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Methyl chloride,False,False,True,5.54,kg,,,120.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Methyl chloroform,False,False,True,161.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Methylene chloride,False,False,True,11.2,kg,,,120.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Nitrogen trifluoride,False,False,True,17400.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Nitrous oxide,False,False,True,273.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,PFC-116,False,False,False,12400.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,PFC-218,False,False,False,9290.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,PFC-31-10,False,False,False,10000.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,PFC-41-12,False,False,False,9220.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,PFC-51-14,False,False,False,8620.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,PFC-91-18,False,False,False,7480.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,PFPMIE,False,False,True,10300.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Sulphur hexafluoride (SF6),False,False,True,24300.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Carbon dioxide,False,False,True,1.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Carbon tetrachloride,False,False,True,2200.0,kg,,,120.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,CFC-113,False,False,True,6520.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,CFC-114,False,False,True,9430.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,CFC-115,False,False,True,9600.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,CFC-11/R11 (trichlorofluoromethane),False,False,True,6230.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,CFC-12/R12 (dichlorodifluoromethane),False,False,True,12500.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,CFC-13,False,False,True,16200.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Halon-1211,False,False,True,1930.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Halon-1301,False,False,True,7200.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,Halon-2402,False,False,True,2170.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HCFC-123,False,False,True,90.4,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HCFC-124,False,False,True,597.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HCFC-141b,False,False,True,860.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HCFC-142b,False,False,True,2300.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HCFC-21,False,False,True,160.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HCFC-225ca,False,False,True,137.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HCFC-225cb,False,False,True,568.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HCFC-22/R22 (chlorodifluoromethane),False,False,True,1960.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HCFE-235da2,False,False,True,539.0,kg,,,25.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-125,False,False,True,3740.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-134,False,False,True,1260.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-134a,False,False,True,1530.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-143,False,False,True,364.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-143a,False,False,True,5810.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-152,False,False,True,21.5,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-152a,False,False,True,164.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-161,False,False,True,4.84,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-227ea,False,False,True,3600.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-23,False,False,True,14600.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-236cb,False,False,True,1350.0,kg,,,250.0
+GHG Protocol,ar6,2024,Scope 1,Fugitive Emissions,HFC-236ea,False,False,True,1500.0,kg,,,250.0

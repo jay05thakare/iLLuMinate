@@ -270,31 +270,147 @@ export const useDashboardData = (year = new Date().getFullYear()) => {
 export const useFacilityData = (facilityId) => {
   const facility = useFacility();
   const emission = useEmission();
+  const { isAuthenticated } = useAuth();
 
-  // Fetch facility details
+  // Check if facilityId is a mock ID
+  const isMockFacility = facilityId && (facilityId === 'facility-1' || facilityId === 'facility-2');
+
+  // Fetch facility details - use mock data for mock IDs or when not authenticated
   const { data: facilityData, loading: facilityLoading, refetch: refetchFacility } = useFetch(
-    () => facilityId ? apiService.getFacility(facilityId) : Promise.resolve({ success: false }),
-    [facilityId],
+    () => {
+      if (!facilityId) return Promise.resolve({ success: false });
+      
+      // If it's a mock facility ID or not authenticated, provide mock data
+      if (isMockFacility || !isAuthenticated) {
+        const mockFacilities = {
+          'facility-1': {
+            success: true,
+            facility: {
+              id: 'facility-1',
+              name: 'JK Cement Muddapur Plant',
+              description: 'Modern cement plant in Muddapur, Karnataka with 1.5 MTPA capacity',
+              location: { 
+                city: 'Muddapur', 
+                state: 'Karnataka', 
+                country: 'India', 
+                capacity_mtpa: 1.5,
+                technology: 'Dry Process Kiln'
+              },
+              status: 'active',
+              organizationId: 'mock-org-id',
+              statistics: {
+                emissionRecordsCount: 12,
+                productionRecordsCount: 12,
+                targetsCount: 2,
+                configuredResourcesCount: 8,
+                currentYearEmissions: 850000,
+                currentYearProduction: 1200000,
+                carbonIntensity: 0.708
+              },
+              createdAt: '2020-01-01T00:00:00Z',
+              updatedAt: '2024-12-01T00:00:00Z'
+            }
+          },
+          'facility-2': {
+            success: true,
+            facility: {
+              id: 'facility-2',
+              name: 'JK Cement Mangrol Plant',
+              description: 'State-of-the-art cement manufacturing facility in Mangrol, Rajasthan with 2.7 MTPA capacity',
+              location: { 
+                city: 'Mangrol', 
+                state: 'Rajasthan', 
+                country: 'India', 
+                capacity_mtpa: 2.7,
+                technology: 'Dry Process with WHR'
+              },
+              status: 'active',
+              organizationId: 'mock-org-id',
+              statistics: {
+                emissionRecordsCount: 12,
+                productionRecordsCount: 12,
+                targetsCount: 3,
+                configuredResourcesCount: 10,
+                currentYearEmissions: 1200000,
+                currentYearProduction: 2400000,
+                carbonIntensity: 0.500
+              },
+              createdAt: '2019-01-01T00:00:00Z',
+              updatedAt: '2024-12-01T00:00:00Z'
+            }
+          }
+        };
+        
+        return Promise.resolve(mockFacilities[facilityId] || { success: false, message: 'Mock facility not found' });
+      }
+      
+      // For real facility IDs with authentication, use the API
+      return apiService.getFacility(facilityId);
+    },
+    [facilityId, isMockFacility, isAuthenticated],
     {
       immediate: !!facilityId,
       onSuccess: (data) => {
-        // Update context with facility data
-        facility.fetchFacility(facilityId);
+        // Update context with facility data only for real facilities
+        if (!isMockFacility && isAuthenticated) {
+          facility.fetchFacility(facilityId);
+        }
       }
     }
   );
 
   // Fetch facility resources
   const { data: resourcesData, loading: resourcesLoading, refetch: refetchResources } = useFetch(
-    () => facilityId ? apiService.getFacilityResources(facilityId) : Promise.resolve({ success: false }),
-    [facilityId],
+    () => {
+      if (!facilityId) return Promise.resolve({ success: false });
+      
+      // Use mock data for mock facilities or when not authenticated
+      if (isMockFacility || !isAuthenticated) {
+        return Promise.resolve({
+          success: true,
+          resources: [
+            { id: 'res1', scope: 'scope1', category: 'fuel', name: 'Coal', consumption: 1000 },
+            { id: 'res2', scope: 'scope1', category: 'fuel', name: 'Biomass', consumption: 200 },
+            { id: 'res3', scope: 'scope2', category: 'electricity', name: 'Grid Electricity', consumption: 500 }
+          ]
+        });
+      }
+      
+      return apiService.getFacilityResources(facilityId);
+    },
+    [facilityId, isMockFacility, isAuthenticated],
     { immediate: !!facilityId }
   );
 
   // Fetch facility emission data
   const { data: emissionData, loading: emissionLoading, refetch: refetchEmissions } = useFetch(
-    () => facilityId ? apiService.getEmissionData(facilityId) : Promise.resolve({ success: false }),
-    [facilityId],
+    () => {
+      if (!facilityId) return Promise.resolve({ success: false });
+      
+      // Use mock data for mock facilities or when not authenticated
+      if (isMockFacility || !isAuthenticated) {
+        const currentYear = new Date().getFullYear();
+        const mockEmissions = [];
+        for (let month = 1; month <= 12; month++) {
+          mockEmissions.push({
+            id: `emit_${month}`,
+            year: currentYear,
+            month,
+            scope: 'scope1',
+            totalEmissions: 70000 + Math.random() * 10000,
+            totalEnergy: 250000 + Math.random() * 50000,
+            resource: { category: 'stationary_combustion' }
+          });
+        }
+        return Promise.resolve({
+          success: true,
+          emissionData: mockEmissions
+        });
+      }
+      
+      return apiService.getEmissionData(facilityId);
+    },
+    [facilityId, isMockFacility, isAuthenticated],
     { immediate: !!facilityId }
   );
 

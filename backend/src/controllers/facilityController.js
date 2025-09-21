@@ -179,7 +179,8 @@ const getFacilityById = async (req, res) => {
         SUM(ed.total_energy) as total_energy,
         COUNT(*) as records_count
       FROM emission_data ed
-      WHERE ed.facility_id = $1
+      JOIN emission_resource_facility_configurations erfc ON ed.emission_resource_facility_config_id = erfc.id
+      WHERE erfc.facility_id = $1
         AND (ed.year * 12 + ed.month) >= (EXTRACT(YEAR FROM CURRENT_DATE) * 12 + EXTRACT(MONTH FROM CURRENT_DATE) - 12)
       GROUP BY ed.month, ed.year, ed.scope
       ORDER BY ed.year DESC, ed.month DESC
@@ -613,7 +614,9 @@ const getFacilityResourcesForAI = async (req, res) => {
               ) ORDER BY ed.year DESC, ed.month DESC
             )
             FROM emission_data ed 
-            WHERE ed.facility_resource_id = fr.id 
+            JOIN emission_resource_facility_configurations erfc ON ed.emission_resource_facility_config_id = erfc.id
+            JOIN emission_resource_configurations erc ON erfc.emission_resource_config_id = erc.id
+            WHERE erfc.facility_id = fr.facility_id AND erc.resource_id = fr.resource_id 
               AND (ed.year * 12 + ed.month) >= (EXTRACT(YEAR FROM CURRENT_DATE) * 12 + EXTRACT(MONTH FROM CURRENT_DATE) - 6)
             LIMIT 6
           ), 
@@ -671,6 +674,270 @@ const getFacilityResourcesForAI = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to get facility resources for AI service',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
+ * Get comprehensive facility data for AI analysis (API key authentication)
+ * GET /api/facilities/:id/ai-analysis
+ */
+const getFacilityForAIAnalysis = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    logger.info(`Fetching comprehensive AI analysis data for facility: ${id}`);
+
+    // Get basic facility information
+    const facilityResult = await query(`
+      SELECT 
+        f.id,
+        f.organization_id,
+        f.name,
+        f.description,
+        f.location,
+        f.status,
+        f.created_at,
+        f.updated_at,
+        COUNT(DISTINCT ed.id) as emission_records_count,
+        COUNT(DISTINCT pd.id) as production_records_count,
+        COUNT(DISTINCT st.id) as targets_count,
+        COUNT(DISTINCT fr.id) as configured_resources_count,
+        SUM(CASE WHEN ed.year = EXTRACT(YEAR FROM CURRENT_DATE) THEN ed.total_emissions ELSE 0 END) as current_year_emissions,
+        SUM(CASE WHEN pd.year = EXTRACT(YEAR FROM CURRENT_DATE) THEN pd.cement_production ELSE 0 END) as current_year_production
+      FROM facilities f
+      LEFT JOIN emission_resource_facility_configurations erfc ON f.id = erfc.facility_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id
+      LEFT JOIN production_data pd ON f.id = pd.facility_id
+      LEFT JOIN sustainability_targets st ON f.id = st.facility_id AND st.status = 'active'
+      LEFT JOIN facility_resources fr ON f.id = fr.facility_id AND fr.is_active = true
+      WHERE f.id = $1
+      GROUP BY f.id, f.organization_id, f.name, f.description, f.location, f.status, f.created_at, f.updated_at
+    `, [id]);
+
+    if (facilityResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Facility not found'
+      });
+    }
+
+    const facility = facilityResult.rows[0];
+
+    // Get recent production data (last 12 months)
+    const recentProductionResult = await query(`
+      SELECT 
+        month,
+        year,
+        cement_production as production,
+        unit,
+        created_at
+      FROM production_data
+      WHERE facility_id = $1
+        AND (year * 12 + month) >= (EXTRACT(YEAR FROM CURRENT_DATE) * 12 + EXTRACT(MONTH FROM CURRENT_DATE) - 12)
+      ORDER BY year DESC, month DESC
+      LIMIT 12
+    `, [id]);
+
+    // Get recent emission data (last 12 months) with resource breakdown
+    const recentEmissionsResult = await query(`
+      SELECT 
+        ed.month,
+        ed.year,
+        ed.scope,
+        ed.consumption,
+        ed.consumption_unit,
+        ed.total_emissions,
+        ed.total_energy,
+        er.resource_name,
+        er.category,
+        er.resource_type
+      FROM emission_data ed
+      JOIN emission_resource_facility_configurations erfc ON ed.emission_resource_facility_config_id = erfc.id
+      JOIN emission_resource_configurations erc ON erfc.emission_resource_config_id = erc.id
+      JOIN emission_resources er ON erc.resource_id = er.id
+      WHERE erfc.facility_id = $1
+        AND (ed.year * 12 + ed.month) >= (EXTRACT(YEAR FROM CURRENT_DATE) * 12 + EXTRACT(MONTH FROM CURRENT_DATE) - 12)
+      ORDER BY ed.year DESC, ed.month DESC, er.scope, er.resource_name
+    `, [id]);
+
+    // Get facility sustainability targets
+    const targetsResult = await query(`
+      SELECT 
+        id,
+        name,
+        description,
+        target_type,
+        baseline_value,
+        target_value,
+        baseline_year,
+        target_year,
+        unit,
+        status,
+        created_at
+      FROM sustainability_targets
+      WHERE facility_id = $1 AND status = 'active'
+      ORDER BY created_at DESC
+    `, [id]);
+
+    // Get configured resources with consumption data
+    const resourcesResult = await query(`
+      SELECT 
+        fr.id as facility_resource_id,
+        fr.is_active,
+        fr.created_at as configured_at,
+        er.id as resource_id,
+        er.resource_name,
+        er.category,
+        er.resource_type as type,
+        er.scope,
+        er.description,
+        ef.id as emission_factor_id,
+        ef.emission_factor,
+        ef.emission_factor_unit,
+        ef.heat_content,
+        ef.heat_content_unit,
+        ef.approximate_cost,
+        ef.cost_unit,
+        ef.availability_score,
+        efl.library_name,
+        efl.version as library_version,
+        efl.year as library_year,
+        efl.region as library_region,
+        -- Get recent consumption data (last 6 months)
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object(
+                'year', ed.year,
+                'month', ed.month,
+                'consumption', ed.consumption,
+                'consumption_unit', ed.consumption_unit,
+                'total_emissions', ed.total_emissions,
+                'total_energy', ed.total_energy
+              ) ORDER BY ed.year DESC, ed.month DESC
+            )
+            FROM emission_data ed 
+            JOIN emission_resource_facility_configurations erfc ON ed.emission_resource_facility_config_id = erfc.id
+            JOIN emission_resource_configurations erc ON erfc.emission_resource_config_id = erc.id
+            WHERE erfc.facility_id = fr.facility_id AND erc.resource_id = fr.resource_id 
+              AND (ed.year * 12 + ed.month) >= (EXTRACT(YEAR FROM CURRENT_DATE) * 12 + EXTRACT(MONTH FROM CURRENT_DATE) - 6)
+            LIMIT 6
+          ), 
+          '[]'::json
+        ) as recent_consumption
+      FROM facility_resources fr
+      JOIN emission_resources er ON fr.resource_id = er.id
+      JOIN emission_factors ef ON fr.emission_factor_id = ef.id
+      JOIN emission_factor_libraries efl ON ef.library_id = efl.id
+      WHERE fr.facility_id = $1 AND fr.is_active = true
+      ORDER BY er.scope, er.category, er.resource_name
+    `, [id]);
+
+    // Calculate carbon intensity
+    const currentYearEmissions = parseFloat(facility.current_year_emissions) || 0;
+    const currentYearProduction = parseFloat(facility.current_year_production) || 0;
+    const carbonIntensity = currentYearProduction > 0 ? currentYearEmissions / currentYearProduction : 0;
+
+    // Build comprehensive facility data response
+    const facilityData = {
+      facility: {
+        id: facility.id,
+        name: facility.name,
+        description: facility.description,
+        location: facility.location,
+        status: facility.status,
+        organizationId: facility.organization_id,
+        statistics: {
+          emissionRecordsCount: parseInt(facility.emission_records_count),
+          productionRecordsCount: parseInt(facility.production_records_count),
+          targetsCount: parseInt(facility.targets_count),
+          configuredResourcesCount: parseInt(facility.configured_resources_count),
+          currentYearEmissions: currentYearEmissions,
+          currentYearProduction: currentYearProduction,
+          carbonIntensity: parseFloat(carbonIntensity.toFixed(3))
+        },
+        createdAt: facility.created_at,
+        updatedAt: facility.updated_at
+      },
+      recent_production: recentProductionResult.rows.map(prod => ({
+        month: prod.month,
+        year: prod.year,
+        production: parseFloat(prod.production),
+        unit: prod.unit,
+        createdAt: prod.created_at
+      })),
+      recent_emissions: recentEmissionsResult.rows.map(emission => ({
+        month: emission.month,
+        year: emission.year,
+        scope: emission.scope,
+        consumption: parseFloat(emission.consumption) || 0,
+        consumptionUnit: emission.consumption_unit,
+        totalEmissions: parseFloat(emission.total_emissions) || 0,
+        totalEnergy: parseFloat(emission.total_energy) || 0,
+        resourceName: emission.resource_name,
+        category: emission.category,
+        resourceType: emission.resource_type
+      })),
+      targets: targetsResult.rows.map(target => ({
+        id: target.id,
+        name: target.name,
+        description: target.description,
+        target_type: target.target_type,
+        baseline_value: parseFloat(target.baseline_value),
+        target_value: parseFloat(target.target_value),
+        baseline_year: target.baseline_year,
+        target_year: target.target_year,
+        unit: target.unit,
+        status: target.status,
+        created_at: target.created_at
+      })),
+      facility_resources: resourcesResult.rows.map(resource => ({
+        facilityResourceId: resource.facility_resource_id,
+        isActive: resource.is_active,
+        configuredAt: resource.configured_at,
+        resource: {
+          id: resource.resource_id,
+          name: resource.resource_name,
+          category: resource.category,
+          type: resource.type,
+          scope: resource.scope,
+          description: resource.description
+        },
+        emissionFactor: {
+          id: resource.emission_factor_id,
+          value: parseFloat(resource.emission_factor),
+          unit: resource.emission_factor_unit,
+          heatContent: parseFloat(resource.heat_content),
+          heatContentUnit: resource.heat_content_unit,
+          approximateCost: parseFloat(resource.approximate_cost) || 0,
+          costUnit: resource.cost_unit,
+          availabilityScore: parseInt(resource.availability_score) || 0,
+          library: {
+            name: resource.library_name,
+            version: resource.library_version,
+            year: resource.library_year,
+            region: resource.library_region
+          }
+        },
+        recentConsumption: resource.recent_consumption || []
+      }))
+    };
+
+    logger.info(`Successfully retrieved comprehensive AI analysis data for facility ${id}`);
+
+    res.json({
+      success: true,
+      data: facilityData,
+      message: `Comprehensive facility data retrieved for AI analysis`
+    });
+
+  } catch (error) {
+    logger.error('Get facility for AI analysis error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get facility data for AI analysis',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
@@ -1442,6 +1709,7 @@ module.exports = {
   deleteFacility,
   getFacilityResources,
   getFacilityResourcesForAI,
+  getFacilityForAIAnalysis,
   bulkConfigureFacilityResources,
   updateFacilityResource,
   removeFacilityResource,

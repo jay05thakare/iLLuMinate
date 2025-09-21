@@ -31,8 +31,8 @@ class Settings(BaseSettings):
     
     # OpenAI
     openai_api_key: str = ""
-    openai_model: str = "gpt-3.5-turbo"
-    openai_max_tokens: int = 1000
+    openai_model: str = "gpt-4"
+    openai_max_tokens: int = 4000
     openai_temperature: float = 0.7
     
     # Backend API

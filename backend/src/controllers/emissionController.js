@@ -11,9 +11,9 @@ const { v4: uuidv4 } = require('uuid');
  * Get emission resources
  * GET /api/emissions/resources
  */
-const getEmissionResources = async (req, res) => {
-  try {
-    const { scope, category, type, search } = req.query;
+  const getEmissionResources = async (req, res) => {
+    try {
+      const { scope, category, type, search } = req.query;
 
     // Build WHERE clause for filters
     let whereConditions = [];
@@ -44,22 +44,26 @@ const getEmissionResources = async (req, res) => {
       paramIndex++;
     }
 
+    // Removed is_alternative_fuel filter - now includes ALL fuels for AI cost analysis
+
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
     const resourcesResult = await query(`
       SELECT 
         er.id,
         er.resource_name as name,
+        er.resource_name,
         er.category,
         er.resource_type as type,
         er.scope,
+        er.is_alternative_fuel,
         er.description,
         er.created_at,
         COUNT(ef.id) as available_factors
       FROM emission_resources er
       LEFT JOIN emission_factors ef ON er.id = ef.resource_id
       ${whereClause}
-      GROUP BY er.id, er.resource_name, er.category, er.resource_type, er.scope, er.description, er.created_at
+      GROUP BY er.id, er.resource_name, er.category, er.resource_type, er.scope, er.is_alternative_fuel, er.description, er.created_at
       ORDER BY er.scope, er.category, er.resource_name
     `, params);
 
@@ -69,9 +73,11 @@ const getEmissionResources = async (req, res) => {
         resources: resourcesResult.rows.map(resource => ({
           id: resource.id,
           name: resource.name,
+          resource_name: resource.resource_name,
           category: resource.category,
           type: resource.type,
           scope: resource.scope,
+          isAlternativeFuel: resource.is_alternative_fuel,
           description: resource.description,
           availableFactors: parseInt(resource.available_factors),
           createdAt: resource.created_at
@@ -1145,10 +1151,328 @@ const assignResourceToFacility = async (req, res) => {
   }
 };
 
+/**
+ * Get emission factors for a specific resource
+ * GET /api/emissions/resources/:resourceId/factors
+ */
+const getResourceFactors = async (req, res) => {
+  try {
+    const { resourceId } = req.params;
+    
+    const factorsResult = await query(`
+      SELECT 
+        ef.id,
+        ef.emission_factor,
+        ef.emission_factor_unit,
+        ef.heat_content,
+        ef.heat_content_unit,
+        ef.cost_INR,
+        ef.approximate_cost,
+        ef.cost_unit,
+        ef.reference_source,
+        ef.notes,
+        ef.created_at,
+        efl.library_name,
+        efl.version as library_version,
+        efl.year as library_year,
+        efl.region as library_region
+      FROM emission_factors ef
+      JOIN emission_factor_libraries efl ON ef.library_id = efl.id
+      WHERE ef.resource_id = $1
+      ORDER BY ef.emission_factor ASC
+    `, [resourceId]);
+
+    res.json({
+      success: true,
+      data: {
+        factors: factorsResult.rows.map(factor => ({
+          id: factor.id,
+          emission_factor: factor.emission_factor,
+          emission_factor_unit: factor.emission_factor_unit,
+          heat_content: factor.heat_content,
+          heat_content_unit: factor.heat_content_unit,
+          cost_INR: factor.cost_inr, // Added cost_INR from database
+          approximate_cost: factor.approximate_cost,
+          cost_unit: factor.cost_unit,
+          reference_source: factor.reference_source,
+          notes: factor.notes,
+          library_name: factor.library_name,
+          library_version: factor.library_version,
+          library_year: factor.library_year,
+          library_region: factor.library_region,
+          createdAt: factor.created_at
+        }))
+      }
+    });
+
+  } catch (error) {
+    logger.error('Get resource factors error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+/**
+ * Get filtered emission factors based on cost, emission, and energy thresholds
+ * POST /api/emissions/factors/filtered
+ */
+const getFilteredFactors = async (req, res) => {
+  try {
+    const { 
+      facilityId, 
+      costLimit, 
+      emissionLimit, 
+      energyMinimum
+    } = req.body;
+    
+    // Get category from query params with default
+    const { category = 'Stationary Combustion' } = req.query;
+
+    logger.info('Getting filtered factors with criteria:', {
+      facilityId,
+      costLimit,
+      emissionLimit,
+      energyMinimum,
+      category
+    });
+
+    // Build WHERE clause for category filter
+    let whereClause = `WHERE ef.cost_INR IS NOT NULL AND ef.emission_factor IS NOT NULL`;
+    let queryParams = [];
+    
+    if (category) {
+      whereClause += ` AND LOWER(er.category) = LOWER($1)`;
+      queryParams.push(category);
+    }
+
+    // First, get all available emission factors with complete data
+    const allFactorsResult = await query(`
+      SELECT 
+        ef.id,
+        ef.resource_id,
+        ef.emission_factor,
+        ef.emission_factor_unit,
+        ef.heat_content,
+        ef.heat_content_unit,
+        ef.cost_INR,
+        ef.approximate_cost,
+        ef.cost_unit,
+        ef.reference_source,
+        ef.notes,
+        ef.availability_score,
+        er.resource_name,
+        er.category as resource_category,
+        er.resource_type,
+        er.scope as resource_scope,
+        er.is_alternative_fuel,
+        er.is_renewable,
+        er.is_biofuel,
+        er.is_refrigerant,
+        efl.library_name,
+        efl.version as library_version,
+        efl.year as library_year,
+        efl.region as library_region,
+        -- Calculate carbon intensity (emission factor / heat content)
+        CASE 
+          WHEN ef.heat_content > 0 THEN ef.emission_factor / ef.heat_content
+          ELSE ef.emission_factor
+        END as carbon_intensity
+      FROM emission_factors ef
+      JOIN emission_resources er ON ef.resource_id = er.id
+      JOIN emission_factor_libraries efl ON ef.library_id = efl.id
+      ${whereClause}
+      ORDER BY ef.emission_factor ASC
+    `, queryParams);
+
+    const allFactors = allFactorsResult.rows;
+
+    if (allFactors.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          factors: [],
+          ranges: {},
+          stats: { total: 0, filtered: 0 }
+        }
+      });
+    }
+
+    // Calculate ranges from actual data
+    const costs = allFactors.map(f => parseFloat(f.cost_inr)).filter(c => c > 0);
+    const emissions = allFactors.map(f => parseFloat(f.emission_factor)).filter(e => e > 0);
+    const energies = allFactors.map(f => parseFloat(f.heat_content || 0)).filter(e => e > 0);
+    const intensities = allFactors.map(f => parseFloat(f.carbon_intensity)).filter(i => i > 0 && isFinite(i));
+
+    const ranges = {
+      cost: { min: Math.min(...costs), max: Math.max(...costs) },
+      emission: { min: Math.min(...emissions), max: Math.max(...emissions) },
+      energy: energies.length > 0 ? { min: Math.min(...energies), max: Math.max(...energies) } : { min: 0, max: 0.1 },
+      intensity: intensities.length > 0 ? { min: Math.min(...intensities), max: Math.max(...intensities) } : { min: 0, max: 10 }
+    };
+
+    // Apply limit-based filtering (not range-based)
+    let filteredFactors = allFactors;
+
+    // Cost filtering: 0 to costLimit (≤ limit)
+    if (costLimit !== undefined && costLimit > 0) {
+      filteredFactors = filteredFactors.filter(factor => {
+        const cost = parseFloat(factor.cost_inr);
+        return cost <= costLimit;
+      });
+      
+      logger.info(`Cost filter: ≤ ₹${costLimit} (0 - ${costLimit})`);
+    }
+
+    // Emission filtering: 0 to emissionLimit (≤ limit)
+    if (emissionLimit !== undefined && emissionLimit > 0) {
+      filteredFactors = filteredFactors.filter(factor => {
+        const emission = parseFloat(factor.emission_factor);
+        return emission <= emissionLimit;
+      });
+      
+      logger.info(`Emission filter: ≤ ${emissionLimit} kgCO₂e/unit (0 - ${emissionLimit})`);
+    }
+
+    // Energy filtering: energyMinimum to highest (≥ minimum requirement)
+    // Only apply if we have actual energy data (not all zeros)
+    if (energyMinimum !== undefined && energyMinimum > 0 && ranges.energy.max > 0) {
+      filteredFactors = filteredFactors.filter(factor => {
+        const energy = parseFloat(factor.heat_content || 0);
+        return energy >= energyMinimum;
+      });
+      
+      logger.info(`Energy filter: ≥ ${(energyMinimum * 1000).toFixed(1)} MJ/unit (${(energyMinimum * 1000).toFixed(1)} - ${(ranges.energy.max * 1000).toFixed(1)})`);
+    } else if (energyMinimum !== undefined && ranges.energy.max === 0) {
+      logger.info(`Energy filter skipped - all heat content values are 0`);
+    }
+
+    // Limit to top options for analysis (3-5 factors)
+    const topFactors = filteredFactors
+      .sort((a, b) => {
+        // Sort by emission factor (lowest first), then by cost (lowest first)
+        const emissionDiff = parseFloat(a.emission_factor) - parseFloat(b.emission_factor);
+        if (Math.abs(emissionDiff) > 0.001) return emissionDiff;
+        return parseFloat(a.cost_inr) - parseFloat(b.cost_inr);
+      })
+      .slice(0, 5);
+
+    const responseData = {
+      factors: topFactors.map(factor => ({
+        id: factor.id,
+        resource_id: factor.resource_id,
+        resource_name: factor.resource_name,
+        resource_type: factor.resource_type,
+        category: factor.resource_category,
+        scope: factor.resource_scope,
+        emission_factor: parseFloat(factor.emission_factor),
+        emission_factor_unit: factor.emission_factor_unit,
+        heat_content: parseFloat(factor.heat_content || 0),
+        heat_content_unit: factor.heat_content_unit || 'GJ/kg',
+        cost_INR: parseFloat(factor.cost_inr),
+        cost_unit: factor.cost_unit,
+        carbon_intensity: parseFloat(factor.carbon_intensity),
+        is_alternative_fuel: factor.is_alternative_fuel,
+        is_renewable: factor.is_renewable,
+        is_biofuel: factor.is_biofuel,
+        is_refrigerant: factor.is_refrigerant,
+        reference_source: factor.reference_source,
+        library_name: factor.library_name,
+        library_version: factor.library_version,
+        library_year: factor.library_year,
+        library_region: factor.library_region,
+        availability_score: factor.availability_score
+      })),
+      ranges,
+      stats: {
+        total: allFactors.length,
+        filtered: filteredFactors.length,
+        selected: topFactors.length
+      },
+      filterCriteria: {
+        costLimit,
+        emissionLimit,
+        energyMinimum,
+        category
+      }
+    };
+
+    logger.info(`Filtered factors: ${filteredFactors.length}/${allFactors.length}, returning top ${topFactors.length}`);
+
+    res.json({
+      success: true,
+      data: responseData
+    });
+
+  } catch (error) {
+    logger.error('Get filtered factors error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+/**
+ * Get available resource categories
+ * GET /api/emissions/categories
+ */
+const getResourceCategories = async (req, res) => {
+  try {
+    const categoriesResult = await query(`
+      SELECT 
+        er.category,
+        COUNT(DISTINCT er.id) as resource_count,
+        COUNT(ef.id) as factor_count,
+        MIN(ef.cost_INR) as min_cost,
+        MAX(ef.cost_INR) as max_cost,
+        MIN(ef.emission_factor) as min_emission,
+        MAX(ef.emission_factor) as max_emission
+      FROM emission_resources er
+      LEFT JOIN emission_factors ef ON er.id = ef.resource_id
+      WHERE ef.cost_INR IS NOT NULL AND ef.emission_factor IS NOT NULL
+      GROUP BY er.category
+      ORDER BY factor_count DESC
+    `);
+
+    const categories = categoriesResult.rows.map(cat => ({
+      category: cat.category,
+      resource_count: parseInt(cat.resource_count),
+      factor_count: parseInt(cat.factor_count),
+      cost_range: {
+        min: parseFloat(cat.min_cost),
+        max: parseFloat(cat.max_cost)
+      },
+      emission_range: {
+        min: parseFloat(cat.min_emission),
+        max: parseFloat(cat.max_emission)
+      }
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        categories
+      }
+    });
+
+  } catch (error) {
+    logger.error('Get resource categories error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   getEmissionResources,
   getEmissionLibraries,
   getEmissionFactors,
+  getResourceFactors,
+  getFilteredFactors,
+  getResourceCategories,
   getEmissionData,
   createEmissionData,
   updateEmissionData,

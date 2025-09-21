@@ -6,6 +6,8 @@ import { useEmission } from '../contexts/EmissionContext';
 import apiService from '../services/api';
 import CementCalculatorModal from '../components/modals/CementCalculatorModal';
 import CementDataEntryModal from '../components/modals/CementDataEntryModal';
+import AIRecommendationsTab from '../components/ai/AIRecommendationsTab';
+import EnhancedAlternativeFuelsOptimizer from '../components/ai/EnhancedAlternativeFuelsOptimizer';
 import {
   BuildingOfficeIcon,
   MapPinIcon,
@@ -219,7 +221,7 @@ const FacilityDetail = () => {
             location={location}
           />;
       case 'recommendations':
-        return <RecommendationsTab facility={facility} />;
+        return <AIRecommendationsTab facility={facility} />;
       default:
         return (
           <ProfileTab 
@@ -1279,103 +1281,9 @@ const TargetsTab = ({ facility, targets, loading }) => {
   );
 };
 
-// Fuels Tab Component
+// Fuels Tab Component - now using the AI-driven DynamicAlternativeFuelsOptimizer
 const FuelsTab = ({ facility }) => (
-  <div className="space-y-6">
-    <div className="flex justify-between items-center">
-      <h3 className="text-lg font-medium text-gray-900">AI-Powered Fuel Recommendations</h3>
-      <button className="btn-primary">Get New Recommendations</button>
-    </div>
-    
-    <div className="card p-6">
-      <h4 className="text-lg font-medium text-gray-900 mb-4">Optimization Preferences</h4>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button className="p-4 border border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50">
-          <div className="text-center">
-            <div className="text-2xl mb-2">💰</div>
-            <div className="font-medium">Cost Optimization</div>
-            <div className="text-sm text-gray-500 mt-1">Minimize fuel costs</div>
-          </div>
-        </button>
-        <button className="p-4 border border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50">
-          <div className="text-center">
-            <div className="text-2xl mb-2">🌱</div>
-            <div className="font-medium">Carbon Reduction</div>
-            <div className="text-sm text-gray-500 mt-1">Lower emissions priority</div>
-          </div>
-        </button>
-        <button className="p-4 border border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50">
-          <div className="text-center">
-            <div className="text-2xl mb-2">⚖️</div>
-            <div className="font-medium">Balanced Approach</div>
-            <div className="text-sm text-gray-500 mt-1">Cost and environmental balance</div>
-          </div>
-        </button>
-      </div>
-    </div>
-
-    <div className="card p-6">
-      <h4 className="text-lg font-medium text-gray-900 mb-4">Current Fuel Mix</h4>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-            <span className="font-medium">Coal</span>
-          </div>
-          <span className="text-gray-600">65%</span>
-        </div>
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-            <span className="font-medium">Natural Gas</span>
-          </div>
-          <span className="text-gray-600">25%</span>
-        </div>
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-            <span className="font-medium">Alternative Fuels</span>
-          </div>
-          <span className="text-gray-600">10%</span>
-        </div>
-      </div>
-    </div>
-
-    <div className="card p-6">
-      <h4 className="text-lg font-medium text-gray-900 mb-4">AI Recommendations</h4>
-      <div className="space-y-4">
-        <div className="border border-green-200 bg-green-50 rounded-lg p-4">
-          <div className="flex items-start">
-            <div className="text-green-600 mr-3 mt-1">✓</div>
-            <div>
-              <h5 className="font-medium text-green-900">Biomass Integration Opportunity</h5>
-              <p className="text-sm text-green-700 mt-1">
-                Replace 15% of coal with biomass waste. Estimated 12% emissions reduction and 8% cost savings.
-              </p>
-              <button className="mt-3 text-sm bg-green-600 text-white px-3 py-1 rounded">
-                Learn More
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">
-          <div className="flex items-start">
-            <div className="text-blue-600 mr-3 mt-1">💡</div>
-            <div>
-              <h5 className="font-medium text-blue-900">Waste Heat Recovery</h5>
-              <p className="text-sm text-blue-700 mt-1">
-                Install waste heat recovery system. Potential 20% energy efficiency improvement.
-              </p>
-              <button className="mt-3 text-sm bg-blue-600 text-white px-3 py-1 rounded">
-                Get Quote
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+          <EnhancedAlternativeFuelsOptimizer facility={facility} />
 );
 
 // AI Recommendations Tab Component

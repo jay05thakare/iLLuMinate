@@ -476,6 +476,45 @@ class ApiService {
   async aiHealthCheck() {
     return fetch(`${AI_API_BASE_URL.replace('/api', '')}/`).then(res => res.json());
   }
+
+  // ===== FACILITY AI RECOMMENDATIONS =====
+
+  async generateFacilityRecommendations(facilityId, focusAreas = null) {
+    try {
+      const params = new URLSearchParams();
+      if (focusAreas && focusAreas.length > 0) {
+        focusAreas.forEach(area => params.append('focus_areas', area));
+      }
+      
+      const queryString = params.toString();
+      const endpoint = `/facility-recommendations/generate/${facilityId}${queryString ? `?${queryString}` : ''}`;
+      
+      return await this.aiRequest(endpoint, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('Generate facility recommendations error:', error);
+      throw error;
+    }
+  }
+
+  async getFacilityDataSources(facilityId) {
+    try {
+      return await this.aiRequest(`/facility-recommendations/data-sources/${facilityId}`);
+    } catch (error) {
+      console.error('Get facility data sources error:', error);
+      throw error;
+    }
+  }
+
+  async getFacilityRecommendationsHealth() {
+    try {
+      return await this.aiRequest('/facility-recommendations/health');
+    } catch (error) {
+      console.error('Get facility recommendations health error:', error);
+      throw error;
+    }
+  }
 }
 
 // Create and export a singleton instance

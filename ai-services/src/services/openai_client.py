@@ -24,8 +24,8 @@ class OpenAIClient:
     def __init__(self):
         """Initialize OpenAI client"""
         self.client = None
-        self.model = settings.openai_model
-        self.max_tokens = settings.openai_max_tokens
+        self.model = "gpt-4"  # Force GPT-4 usage
+        self.max_tokens = 4000  # Increase tokens for GPT-4
         self.temperature = settings.openai_temperature
         self._initialize_client()
         

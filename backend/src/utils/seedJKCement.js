@@ -636,14 +636,14 @@ async function seedJKCementOperationalData(orgId, mangrolPlantId, muddapurPlantI
       if (existingData.rows.length === 0) {
         await query(`
           INSERT INTO emission_data (
-            id, organization_id, facility_id, emission_resource_facility_config_id, 
+            id, organization_id, emission_resource_facility_config_id, 
             month, year, scope, consumption, consumption_unit, 
             emission_factor, total_emissions, total_energy, 
             created_at, updated_at
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
         `, [
-          uuidv4(), orgId, facilityResource.facility_id, facilityResource.facility_resource_config_id,
+          uuidv4(), orgId, facilityResource.facility_resource_config_id,
           month, 2025, facilityResource.scope, consumption.toFixed(2), consumptionUnit,
           actualEmissionFactor, totalEmissions.toFixed(2), totalEnergy.toFixed(2)
         ]);

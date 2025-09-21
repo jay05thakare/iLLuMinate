@@ -22,7 +22,7 @@ router.get('/resources',
       scope: Joi.string().valid('scope1', 'scope2').optional(),
       category: Joi.string().optional(),
       type: Joi.string().optional(),
-      search: Joi.string().min(2).max(100).optional()
+      search: Joi.string().min(2).max(100).optional(),
     })
   }),
   emissionController.getEmissionResources
@@ -61,6 +61,58 @@ router.get('/factors',
     })
   }),
   emissionController.getEmissionFactors
+);
+
+/**
+ * @route   GET /api/emissions/resources/:resourceId/factors
+ * @desc    Get emission factors for a specific resource
+ * @access  Private (Organization members only)
+ */
+router.get('/resources/:resourceId/factors', 
+  authenticateToken,
+  validate({
+    params: Joi.object({
+      resourceId: Joi.string().uuid().required()
+    })
+  }),
+  emissionController.getResourceFactors
+);
+
+/**
+ * @route   POST /api/emissions/factors/filtered
+ * @desc    Get filtered emission factors based on cost, emission, and energy thresholds
+ * @access  Private (Organization members only)
+ */
+router.post('/factors/filtered', 
+  authenticateToken,
+  validate({
+    query: Joi.object({
+      category: Joi.string().valid(
+        'Stationary Combustion',
+        'Fugitive Emissions', 
+        'Mobile Combustion',
+        'Purchased Electricity',
+        'stationary_combustion'
+      ).default('Stationary Combustion') // Default to Stationary Combustion
+    }),
+    body: Joi.object({
+      facilityId: Joi.string().uuid().optional(),
+      costLimit: Joi.number().min(0).optional(),
+      emissionLimit: Joi.number().min(0).optional(),
+      energyMinimum: Joi.number().min(0).optional()
+    }).min(1) // At least one filter must be provided
+  }),
+  emissionController.getFilteredFactors
+);
+
+/**
+ * @route   GET /api/emissions/categories
+ * @desc    Get available resource categories
+ * @access  Private (Organization members only)
+ */
+router.get('/categories', 
+  authenticateToken,
+  emissionController.getResourceCategories
 );
 
 /**

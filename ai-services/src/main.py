@@ -17,7 +17,9 @@ import uvicorn
 
 from .config.settings import get_settings
 from .utils.logger import setup_logger
-from .routers import health, recommendations, chat
+from .routers import health, recommendations, chat, facility_recommendations, fuel_cost_analysis, smart_fuel_analysis
+# Temporarily disable dynamic_fuel_optimizer due to dependency issues
+# from .routers import dynamic_fuel_optimizer
 from .middleware.auth_middleware import AuthMiddleware
 from .middleware.error_handler import ErrorHandlerMiddleware
 
@@ -93,6 +95,11 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix="/health", tags=["health"])
     app.include_router(recommendations.router, prefix="/api/recommendations", tags=["recommendations"])
     app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
+    app.include_router(facility_recommendations.router, prefix="/api", tags=["facility-recommendations"])
+    app.include_router(fuel_cost_analysis.router, prefix="/api", tags=["fuel-cost-analysis"])
+    app.include_router(smart_fuel_analysis.router, prefix="/api", tags=["smart-fuel-analysis"])
+    # Temporarily disable dynamic_fuel_optimizer
+    # app.include_router(dynamic_fuel_optimizer.router, prefix="/api", tags=["dynamic-fuel-optimizer"])
     
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):

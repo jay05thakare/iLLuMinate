@@ -227,7 +227,8 @@ const getOrganizationStats = async (req, res) => {
         SUM(ed.total_energy) as total_energy,
         COUNT(*) as record_count
       FROM emission_data ed
-      WHERE ed.organization_id = $1 
+      JOIN emission_resource_facility_configurations erfc ON ed.emission_resource_facility_config_id = erfc.id
+      WHERE erfc.organization_id = $1 
         AND ed.year = $2
       GROUP BY ed.scope
     `, [id, currentYear]);
@@ -448,16 +449,17 @@ const getOrganizationEmissionAnalytics = async (req, res) => {
         SUM(ed.total_emissions) as total_emissions,
         SUM(ed.total_energy) as total_energy,
         COUNT(*) as data_entries,
-        f.id as facility_id,
+        erfc.facility_id,
         f.name as facility_name,
         er.category as resource_category
       FROM emission_data ed
-      JOIN facilities f ON ed.facility_id = f.id
-      JOIN facility_resources fr ON ed.facility_resource_id = fr.id
-      JOIN emission_resources er ON fr.resource_id = er.id
-      WHERE ed.organization_id = $1 
+      JOIN emission_resource_facility_configurations erfc ON ed.emission_resource_facility_config_id = erfc.id
+      JOIN facilities f ON erfc.facility_id = f.id
+      JOIN emission_resource_configurations erc ON erfc.emission_resource_config_id = erc.id
+      JOIN emission_resources er ON erc.resource_id = er.id
+      WHERE erfc.organization_id = $1 
         AND ed.year = $2
-      GROUP BY ed.year, ed.month, ed.scope, f.id, f.name, er.category
+      GROUP BY ed.year, ed.month, ed.scope, erfc.facility_id, f.name, er.category
       ORDER BY ed.year DESC, ed.month DESC, ed.scope, f.name
     `, [organizationId, parseInt(year)]);
 
@@ -705,10 +707,11 @@ const getOrganizationDashboard = async (req, res) => {
       SELECT 
         SUM(ed.total_emissions) as total_emissions,
         SUM(ed.total_energy) as total_energy,
-        COUNT(DISTINCT ed.facility_id) as facilities_with_data,
+        COUNT(DISTINCT erfc.facility_id) as facilities_with_data,
         COUNT(*) as total_entries
       FROM emission_data ed
-      WHERE ed.organization_id = $1 AND ed.year = $2
+      JOIN emission_resource_facility_configurations erfc ON ed.emission_resource_facility_config_id = erfc.id
+      WHERE erfc.organization_id = $1 AND ed.year = $2
     `, [organizationId, parseInt(year)]);
 
     // Get production totals for the year
