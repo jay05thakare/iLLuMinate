@@ -85,7 +85,8 @@ const getOrganizationTimeSeries = async (req, res) => {
       FROM facilities f
       LEFT JOIN production_data pd ON f.id = pd.facility_id 
         AND pd.year >= $2 AND pd.year <= $3
-      LEFT JOIN emission_data ed ON f.id = ed.facility_id 
+      LEFT JOIN emission_resource_facility_configurations erfc ON f.id = erfc.facility_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id 
         AND ed.year = pd.year AND ed.month = pd.month
       WHERE f.organization_id = $1
       GROUP BY f.id, f.name, f.location, pd.year, pd.month, pd.cement_production

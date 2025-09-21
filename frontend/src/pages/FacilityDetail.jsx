@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useFacilityData } from '../hooks/useData';
 import { useFacility } from '../contexts/FacilityContext';
 import { useEmission } from '../contexts/EmissionContext';
@@ -20,11 +20,16 @@ import {
 
 const FacilityDetail = () => {
   const { facilityId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { facility, resources, emissionData, metrics, loading } = useFacilityData(facilityId);
   const { getFacilityById } = useFacility();
   const { facilityAssignments, fetchFacilityAssignments } = useEmission();
-  const [activeTab, setActiveTab] = useState('profile');
-  const [activeSubTab, setActiveSubTab] = useState('data');
+  
+  // Get tab, sub-tab, month, and year from URL parameters or use defaults
+  const urlParams = new URLSearchParams(location.search);
+  const [activeTab, setActiveTab] = useState(urlParams.get('tab') || 'profile');
+  const [activeSubTab, setActiveSubTab] = useState(urlParams.get('subTab') || 'data');
   const [cementModalOpen, setCementModalOpen] = useState(false);
   const [selectedCalculator, setSelectedCalculator] = useState(null);
   const [calculatorConfigs, setCalculatorConfigs] = useState({});
@@ -34,6 +39,42 @@ const FacilityDetail = () => {
   const [cementDataEntries, setCementDataEntries] = useState([]);
   const [facilityTargets, setFacilityTargets] = useState([]);
   const [targetsLoading, setTargetsLoading] = useState(false);
+
+  // Update URL when tabs change
+  const updateActiveTab = (tabId) => {
+    setActiveTab(tabId);
+    const newParams = new URLSearchParams(location.search);
+    newParams.set('tab', tabId);
+    // Reset sub-tab when changing main tabs
+    if (tabId === 'sustainability') {
+      newParams.set('subTab', activeSubTab);
+    } else {
+      newParams.delete('subTab');
+    }
+    navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+  };
+
+  const updateActiveSubTab = (subTabId) => {
+    setActiveSubTab(subTabId);
+    const newParams = new URLSearchParams(location.search);
+    newParams.set('tab', 'sustainability');
+    newParams.set('subTab', subTabId);
+    navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+  };
+
+  // Sync state with URL parameters when location changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const tabFromUrl = urlParams.get('tab');
+    const subTabFromUrl = urlParams.get('subTab');
+    
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+    if (subTabFromUrl && subTabFromUrl !== activeSubTab) {
+      setActiveSubTab(subTabFromUrl);
+    }
+  }, [location.search, activeTab, activeSubTab]);
 
   // Fetch facility assignments for this facility when component mounts
   useEffect(() => {
@@ -169,11 +210,13 @@ const FacilityDetail = () => {
             resources={facilityResources}
             emissionData={emissionData}
             activeSubTab={activeSubTab}
-            setActiveSubTab={setActiveSubTab}
+            setActiveSubTab={updateActiveSubTab}
             onCalculatorConfigure={handleCalculatorConfigure}
             calculatorConfigs={calculatorConfigs}
             targetsLoading={targetsLoading}
             facilityResources={facilityResources}
+            navigate={navigate}
+            location={location}
           />;
       case 'recommendations':
         return <RecommendationsTab facility={facility} />;
@@ -224,7 +267,7 @@ const FacilityDetail = () => {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => updateActiveTab(tab.id)}
               className={`group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.id
                   ? 'border-primary-500 text-primary-600'
@@ -270,7 +313,7 @@ const FacilityDetail = () => {
   };
 
 // Sustainability Tab Component with Sub-tabs
-const SustainabilityTab = ({ facility, emissions, production, targets, resources, emissionData, activeSubTab, setActiveSubTab, onCalculatorConfigure, calculatorConfigs, facilityResources, targetsLoading }) => {
+const SustainabilityTab = ({ facility, emissions, production, targets, resources, emissionData, activeSubTab, setActiveSubTab, onCalculatorConfigure, calculatorConfigs, facilityResources, targetsLoading, navigate, location }) => {
   const subTabs = [
     { id: 'data', name: 'Data', icon: ChartBarIcon },
     { id: 'goals', name: 'Goals', icon: ClipboardDocumentListIcon },
@@ -288,6 +331,8 @@ const SustainabilityTab = ({ facility, emissions, production, targets, resources
           emissionData={emissionData}
           onCalculatorConfigure={onCalculatorConfigure}
           calculatorConfigs={calculatorConfigs}
+          navigate={navigate}
+          location={location}
         />;
       case 'goals':
         return <TargetsTab facility={facility} targets={targets} loading={targetsLoading} />;
@@ -302,6 +347,8 @@ const SustainabilityTab = ({ facility, emissions, production, targets, resources
           emissionData={emissionData}
           onCalculatorConfigure={onCalculatorConfigure}
           calculatorConfigs={calculatorConfigs}
+          navigate={navigate}
+          location={location}
         />;
     }
   };
@@ -449,12 +496,17 @@ const ProfileTab = ({ facility, yearlyEmissions, yearlyProduction, carbonIntensi
 );
 
 // Data Tab Component
-const DataTab = ({ facility, emissions, production, resources, emissionData, onCalculatorConfigure, calculatorConfigs }) => {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+const DataTab = ({ facility, emissions, production, resources, emissionData, onCalculatorConfigure, calculatorConfigs, navigate, location }) => {
+  // Get month and year from URL parameters or use defaults
+  const urlParams = new URLSearchParams(location.search);
+  const [selectedMonth, setSelectedMonth] = useState(parseInt(urlParams.get('month')) || new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(parseInt(urlParams.get('year')) || new Date().getFullYear());
   const [consumptionData, setConsumptionData] = useState({});
+  const [existingEmissionData, setExistingEmissionData] = useState({});
   const [productionValue, setProductionValue] = useState('');
   const [showIndustrialModal, setShowIndustrialModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Use the facility-specific data passed as props
   const facilityResourcesList = resources || [];
@@ -464,8 +516,10 @@ const DataTab = ({ facility, emissions, production, resources, emissionData, onC
   console.log('🔧 DataTab: Emission data received:', facilityEmissionData);
   
   // Transform facility assignments to match expected format
+  // The facilityResourcesList contains raw assignment data from the API
   const transformedResources = facilityResourcesList.map(assignment => ({
-    id: assignment.resource_id,
+    id: assignment.assignment_id, // Use assignment_id as the primary key
+    assignment_id: assignment.assignment_id,
     resource_id: assignment.resource_id,
     resource_name: assignment.resource_name,
     category: assignment.category,
@@ -475,20 +529,131 @@ const DataTab = ({ facility, emissions, production, resources, emissionData, onC
     heat_content: assignment.heat_content,
     heat_content_unit: assignment.heat_content_unit,
     library_name: assignment.library_name,
-    library_year: assignment.library_year
+    library_year: assignment.library_year,
+    // Add the original assignment for reference
+    _originalAssignment: assignment
   }));
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
+
+  // Fetch emission data for selected month/year and prefill consumption data
+  const fetchAndPrefillEmissionData = async (month, year) => {
+    if (!facility?.id) return;
+    
+    setIsLoading(true);
+    try {
+      console.log(`🔄 Fetching emission data for ${facility.id}, month: ${month}, year: ${year}`);
+      
+      const response = await apiService.getEmissionData(facility.id, { month, year });
+      
+      if (response.success && response.data?.emissionData) {
+        const monthYearData = response.data.emissionData;
+        console.log('📊 Emission data for period:', monthYearData);
+        
+        // Store the existing emission data for reference
+        const existingDataMap = {};
+        const consumptionMap = {};
+        
+        monthYearData.forEach(data => {
+          // The emission data has resource.name, we need to match it with facility assignments
+          const emissionResourceName = data.resource?.name;
+          
+          if (!emissionResourceName) {
+            console.log('⚠️  Emission data missing resource name:', data);
+            return;
+          }
+          
+          // Find matching facility resource assignment by resource name
+          // facilityResourcesList contains the raw assignment data with resource_name field
+          const matchingAssignment = facilityResourcesList.find(assignment => 
+            assignment.resource_name === emissionResourceName
+          );
+          
+          if (matchingAssignment) {
+            // Use assignment_id as the key for mapping
+            const assignmentId = matchingAssignment.assignment_id;
+            
+            // Check if this emission data belongs to this assignment
+            // The emission data should have facilityConfigId that matches assignment_id
+            if (data.facilityConfigId === assignmentId) {
+              existingDataMap[assignmentId] = {
+                ...data,
+                facilityAssignmentId: assignmentId,
+                facilityResourceId: assignmentId // This will be used for API calls
+              };
+              consumptionMap[assignmentId] = data.consumption;
+              
+              console.log(`✅ Mapped emission data for resource "${emissionResourceName}" (Assignment ID: ${assignmentId}):`, {
+                consumption: data.consumption,
+                totalEmissions: data.totalEmissions,
+                facilityConfigId: data.facilityConfigId,
+                assignmentDetails: matchingAssignment
+              });
+            } else {
+              console.log(`⚠️  Emission data facilityConfigId (${data.facilityConfigId}) doesn't match assignment ID (${assignmentId}) for resource "${emissionResourceName}"`);
+            }
+          } else {
+            console.log(`⚠️  No matching facility assignment found for emission resource "${emissionResourceName}"`);
+            console.log('🔍 Available facility assignments:', facilityResourcesList.map(a => a.resource_name));
+          }
+        });
+        
+        setExistingEmissionData(existingDataMap);
+        setConsumptionData(consumptionMap);
+        
+        console.log('🎯 Prefilled consumption data:', consumptionMap);
+      } else {
+        console.log('📋 No existing emission data found for this period');
+        setExistingEmissionData({});
+        setConsumptionData({});
+      }
+    } catch (error) {
+      console.error('❌ Error fetching emission data:', error);
+      setExistingEmissionData({});
+      setConsumptionData({});
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update URL when month/year changes
+  const updateMonthYear = (month, year) => {
+    const newParams = new URLSearchParams(location.search);
+    newParams.set('tab', 'sustainability');
+    newParams.set('subTab', 'data');
+    newParams.set('month', month.toString());
+    newParams.set('year', year.toString());
+    navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+  };
+
+  // Sync state with URL parameters when location changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const monthFromUrl = parseInt(urlParams.get('month'));
+    const yearFromUrl = parseInt(urlParams.get('year'));
+    
+    if (monthFromUrl && monthFromUrl !== selectedMonth && monthFromUrl >= 1 && monthFromUrl <= 12) {
+      setSelectedMonth(monthFromUrl);
+    }
+    if (yearFromUrl && yearFromUrl !== selectedYear && yearFromUrl >= 2020 && yearFromUrl <= 2030) {
+      setSelectedYear(yearFromUrl);
+    }
+  }, [location.search]);
+
+  // Fetch data when month/year changes
+  useEffect(() => {
+    fetchAndPrefillEmissionData(selectedMonth, selectedYear);
+  }, [selectedMonth, selectedYear, facility?.id]);
   
   // Helper functions for calculations (adapted for facility resources)
-  const getResourceWithFactor = (resourceId) => {
-    // Find the resource with emission factor data already included
+  const getResourceWithFactor = (assignmentId) => {
+    // Find the resource by assignment_id (which is now our primary key)
     const facilityResource = transformedResources.find(r => 
-      r.resource_id === resourceId || 
-      r.id === resourceId
+      r.assignment_id === assignmentId || 
+      r.id === assignmentId
     );
     return facilityResource || null;
   };
@@ -516,13 +681,97 @@ const DataTab = ({ facility, emissions, production, resources, emissionData, onC
 
   // Get facility resources by category
   const getResourcesByCategory = (scope, category) => {
-    return transformedResources.filter(r => {
+    const resources = transformedResources.filter(r => {
       const resourceScope = r.scope;
       const resourceCategory = r.category;
       
       return resourceScope === scope && 
              resourceCategory === category;
     });
+    
+    console.log(`🔍 getResourcesByCategory(${scope}, ${category}) found ${resources.length} resources:`, 
+      resources.map(r => ({ name: r.resource_name, id: r.assignment_id }))
+    );
+    
+    return resources;
+  };
+
+  // Save emission data (create or update)
+  const saveEmissionData = async () => {
+    if (!facility?.id) return;
+    
+    setIsSaving(true);
+    try {
+      console.log('💾 Saving emission data for consumption:', consumptionData);
+      
+      const savePromises = [];
+      
+      Object.entries(consumptionData).forEach(([assignmentId, consumption]) => {
+        if (consumption && parseFloat(consumption) > 0) {
+          const existingData = existingEmissionData[assignmentId];
+          const resource = transformedResources.find(r => 
+            r.assignment_id === assignmentId || r.id === assignmentId
+          );
+          
+          if (!resource) {
+            console.log(`⚠️  Resource assignment not found for ID: ${assignmentId}`);
+            return;
+          }
+          
+          if (existingData) {
+            // Update existing record
+            const updatePromise = apiService.updateEmissionData(existingData.id, {
+              consumption: parseFloat(consumption),
+              consumptionUnit: resource.emission_factor_unit || 'kg'
+            });
+            savePromises.push(updatePromise);
+            console.log(`🔄 Updating existing record for ${resource.resource_name} (emission data ID: ${existingData.id})`);
+          } else {
+            // Create new record - need to check if we're using the new schema or old schema
+            // For now, let's try with assignment_id as facilityResourceId (this might need backend adjustment)
+            const createPromise = apiService.createEmissionData({
+              facilityId: facility.id,
+              facilityResourceId: assignmentId, // This might need to be adjusted based on backend schema
+              month: selectedMonth,
+              year: selectedYear,
+              consumption: parseFloat(consumption),
+              consumptionUnit: resource.emission_factor_unit || 'kg'
+            });
+            savePromises.push(createPromise);
+            console.log(`➕ Creating new record for ${resource.resource_name} (assignment ID: ${assignmentId})`);
+            console.log('🔍 Resource assignment object for debugging:', resource);
+          }
+        }
+      });
+      
+      if (savePromises.length === 0) {
+        alert('No data to save. Please enter consumption values.');
+        return;
+      }
+      
+      const results = await Promise.all(savePromises);
+      const successful = results.filter(r => r.success).length;
+      const failed = results.filter(r => !r.success).length;
+      
+      if (failed === 0) {
+        alert(`✅ Successfully saved ${successful} emission records!`);
+        // Refresh the data to show updated values
+        await fetchAndPrefillEmissionData(selectedMonth, selectedYear);
+      } else {
+        alert(`⚠️ Saved ${successful} records, but ${failed} failed. Check console for details.`);
+        results.forEach((result, index) => {
+          if (!result.success) {
+            console.error(`Failed to save record ${index}:`, result);
+          }
+        });
+      }
+      
+    } catch (error) {
+      console.error('❌ Error saving emission data:', error);
+      alert('Failed to save emission data. Check console for details.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleIndustrialProcessClick = () => {
@@ -544,13 +793,54 @@ const DataTab = ({ facility, emissions, production, resources, emissionData, onC
             <p className="text-sm text-gray-500 mt-1">
               Enter consumption data by emission scope and category
             </p>
+            {Object.keys(existingEmissionData).length > 0 && (
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-sm text-green-800 font-medium">
+                    {Object.keys(existingEmissionData).length} resource(s) have existing data for {months[selectedMonth - 1]} {selectedYear}
+                  </span>
+                </div>
+                <p className="text-xs text-green-700 mt-1">
+                  Fields with existing data are highlighted and will be updated when you save.
+                </p>
+              </div>
+            )}
+            
+            {/* Debug information - remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs">
+                <details>
+                  <summary className="cursor-pointer text-blue-800 font-medium">Debug Information</summary>
+                  <div className="mt-2 space-y-2">
+                    <div>
+                      <strong>Facility Resources:</strong> {facilityResourcesList.length} assignments
+                    </div>
+                    <div>
+                      <strong>Transformed Resources:</strong> {transformedResources.length} resources
+                    </div>
+                    <div>
+                      <strong>Existing Emission Data:</strong> {Object.keys(existingEmissionData).length} records
+                    </div>
+                    <div>
+                      <strong>Consumption Data:</strong> {Object.keys(consumptionData).length} entries
+                    </div>
+                  </div>
+                </details>
+              </div>
+            )}
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-sm font-medium text-gray-700">Period:</span>
             <select 
               className="input w-auto"
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+              onChange={(e) => {
+                const newMonth = parseInt(e.target.value);
+                setSelectedMonth(newMonth);
+                updateMonthYear(newMonth, selectedYear);
+              }}
+              disabled={isLoading}
             >
               {months.map((month, index) => (
                 <option key={month} value={index + 1}>{month}</option>
@@ -559,13 +849,37 @@ const DataTab = ({ facility, emissions, production, resources, emissionData, onC
             <select 
               className="input w-auto"
               value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              onChange={(e) => {
+                const newYear = parseInt(e.target.value);
+                setSelectedYear(newYear);
+                updateMonthYear(selectedMonth, newYear);
+              }}
+              disabled={isLoading}
             >
               <option value={2024}>2024</option>
               <option value={2023}>2023</option>
               <option value={2022}>2022</option>
             </select>
-            <button className="btn-primary">Save All Data</button>
+            {isLoading && (
+              <div className="flex items-center text-sm text-gray-500">
+                <div className="loading-spinner h-4 w-4 mr-2"></div>
+                Loading data...
+              </div>
+            )}
+            <button 
+              className="btn-primary"
+              onClick={saveEmissionData}
+              disabled={isLoading || isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <div className="loading-spinner h-4 w-4 mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                'Save All Data'
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -574,6 +888,7 @@ const DataTab = ({ facility, emissions, production, resources, emissionData, onC
       <Scope1Section 
         getResourcesByCategory={getResourcesByCategory}
         consumptionData={consumptionData}
+        existingEmissionData={existingEmissionData}
         handleConsumptionChange={handleConsumptionChange}
         calculateEmissions={calculateEmissions}
         calculateHeatContent={calculateHeatContent}
@@ -584,6 +899,7 @@ const DataTab = ({ facility, emissions, production, resources, emissionData, onC
       <Scope2Section 
         getResourcesByCategory={getResourcesByCategory}
         consumptionData={consumptionData}
+        existingEmissionData={existingEmissionData}
         handleConsumptionChange={handleConsumptionChange}
         calculateEmissions={calculateEmissions}
         calculateHeatContent={calculateHeatContent}
@@ -612,6 +928,7 @@ const DataTab = ({ facility, emissions, production, resources, emissionData, onC
 const Scope1Section = ({ 
   getResourcesByCategory, 
   consumptionData, 
+  existingEmissionData,
   handleConsumptionChange, 
   calculateEmissions, 
   calculateHeatContent,
@@ -640,6 +957,7 @@ const Scope1Section = ({
             scope="scope1"
             resources={getResourcesByCategory('scope1', category.key)}
             consumptionData={consumptionData}
+            existingEmissionData={existingEmissionData}
             handleConsumptionChange={handleConsumptionChange}
             calculateEmissions={calculateEmissions}
             calculateHeatContent={calculateHeatContent}
@@ -655,6 +973,7 @@ const Scope1Section = ({
 const Scope2Section = ({ 
   getResourcesByCategory, 
   consumptionData, 
+  existingEmissionData,
   handleConsumptionChange, 
   calculateEmissions, 
   calculateHeatContent 
@@ -682,6 +1001,7 @@ const Scope2Section = ({
             scope="scope2"
             resources={getResourcesByCategory('scope2', category.key)}
             consumptionData={consumptionData}
+            existingEmissionData={existingEmissionData}
             handleConsumptionChange={handleConsumptionChange}
             calculateEmissions={calculateEmissions}
             calculateHeatContent={calculateHeatContent}
@@ -698,6 +1018,7 @@ const CategorySection = ({
   scope, 
   resources, 
   consumptionData, 
+  existingEmissionData,
   handleConsumptionChange, 
   calculateEmissions, 
   calculateHeatContent,
@@ -758,30 +1079,46 @@ const CategorySection = ({
             </thead>
             <tbody className="bg-white">
               {resources.map((resource) => {
-                const resourceId = resource.id || resource.facilityResourceId || resource.resource?.id;
-                const resourceName = resource.name || resource.resource?.name || resource.resource_name || 'Unknown Resource';
+                const assignmentId = resource.assignment_id || resource.id;
+                const resourceName = resource.resource_name || resource.name || 'Unknown Resource';
                 // Direct access to flat data structure from API
                 const factorValue = parseFloat(resource.emission_factor) || 0;
                 const unit = resource.emission_factor_unit || 'N/A';
                 const heatContentValue = parseFloat(resource.heat_content) || 0;
                 const heatUnit = resource.heat_content_unit || 'GJ';
                 
-                const consumption = consumptionData[resourceId] || 0;
+                const consumption = consumptionData[assignmentId] || 0;
                 const emissions = calculateEmissions(resource, consumption);
                 const heat = calculateHeatContent(resource, consumption);
+                const hasExistingData = existingEmissionData[assignmentId];
                 
                 return (
-                  <tr key={resourceId} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-3 font-medium text-gray-900">{resourceName}</td>
+                  <tr key={assignmentId} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-3 px-3 font-medium text-gray-900">
+                      <div className="flex items-center">
+                        {hasExistingData && (
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2" title="Has existing data"></div>
+                        )}
+                        {resourceName}
+                      </div>
+                    </td>
                     <td className="py-3 px-3 text-center">
-                      <input 
-                        type="number" 
-                        className="input w-24 text-center"
-                        placeholder="0"
-                        step="0.01"
-                        value={consumption || ''}
-                        onChange={(e) => handleConsumptionChange(resourceId, e.target.value)}
-                      />
+                      <div className="relative">
+                        <input 
+                          type="number" 
+                          className={`input w-24 text-center ${hasExistingData ? 'border-green-300 bg-green-50' : ''}`}
+                          placeholder="0"
+                          step="0.01"
+                          value={consumption || ''}
+                          onChange={(e) => handleConsumptionChange(assignmentId, e.target.value)}
+                          title={hasExistingData ? `Existing data: ${hasExistingData.consumption}` : 'Enter consumption amount'}
+                        />
+                        {hasExistingData && (
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full text-white text-xs flex items-center justify-center">
+                            ✓
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-3 text-center text-gray-600">{unit}</td>
                     <td className="py-3 px-3 text-center text-gray-600">

@@ -298,7 +298,7 @@ const getEmissionData = async (req, res) => {
     }
 
     // Build WHERE clause for filters
-    let whereConditions = ['ed.facility_id = $1', 'ed.organization_id = $2'];
+    let whereConditions = ['erfc.facility_id = $1', 'erfc.organization_id = $2'];
     let params = [facilityId, organizationId];
     let paramIndex = 3;
 
@@ -338,11 +338,13 @@ const getEmissionData = async (req, res) => {
         er.category as resource_category,
         er.resource_type,
         efl.library_name,
-        efl.version as library_version
+        efl.version as library_version,
+        erfc.id as facility_config_id
       FROM emission_data ed
-      JOIN facility_resources fr ON ed.facility_resource_id = fr.id
-      JOIN emission_resources er ON fr.resource_id = er.id
-      JOIN emission_factors ef ON fr.emission_factor_id = ef.id
+      JOIN emission_resource_facility_configurations erfc ON ed.emission_resource_facility_config_id = erfc.id
+      JOIN emission_resource_configurations erc ON erfc.emission_resource_config_id = erc.id
+      JOIN emission_resources er ON erc.resource_id = er.id
+      JOIN emission_factors ef ON erc.emission_factor_id = ef.id
       JOIN emission_factor_libraries efl ON ef.library_id = efl.id
       WHERE ${whereConditions.join(' AND ')}
       ORDER BY ed.year DESC, ed.month DESC, ed.scope, er.resource_name
@@ -363,6 +365,7 @@ const getEmissionData = async (req, res) => {
           heatContent: parseFloat(data.heat_content),
           totalEmissions: parseFloat(data.total_emissions),
           totalEnergy: parseFloat(data.total_energy),
+          facilityConfigId: data.facility_config_id,
           resource: {
             name: data.resource_name,
             category: data.resource_category,
@@ -409,19 +412,20 @@ const createEmissionData = async (req, res) => {
       });
     }
 
-    // Get facility resource configuration
+    // Get facility resource configuration (using new schema)
     const facilityResourceResult = await query(`
       SELECT 
-        fr.id,
-        fr.resource_id,
-        fr.emission_factor_id,
+        erfc.id,
+        erc.resource_id,
+        erc.emission_factor_id,
         er.scope,
         ef.emission_factor,
         ef.heat_content
-      FROM facility_resources fr
-      JOIN emission_resources er ON fr.resource_id = er.id
-      JOIN emission_factors ef ON fr.emission_factor_id = ef.id
-      WHERE fr.id = $1 AND fr.facility_id = $2 AND fr.organization_id = $3 AND fr.is_active = true
+      FROM emission_resource_facility_configurations erfc
+      JOIN emission_resource_configurations erc ON erfc.emission_resource_config_id = erc.id
+      JOIN emission_resources er ON erc.resource_id = er.id
+      JOIN emission_factors ef ON erc.emission_factor_id = ef.id
+      WHERE erfc.id = $1 AND erfc.facility_id = $2 AND erfc.organization_id = $3 AND erfc.is_active = true
     `, [facilityResourceId, facilityId, organizationId]);
 
     if (facilityResourceResult.rows.length === 0) {
@@ -436,8 +440,8 @@ const createEmissionData = async (req, res) => {
     // Check if data already exists for this month/year/resource
     const existingDataResult = await query(`
       SELECT id FROM emission_data 
-      WHERE facility_id = $1 AND facility_resource_id = $2 AND month = $3 AND year = $4
-    `, [facilityId, facilityResourceId, month, year]);
+      WHERE emission_resource_facility_config_id = $1 AND month = $2 AND year = $3
+    `, [facilityResourceId, month, year]);
 
     if (existingDataResult.rows.length > 0) {
       return res.status(409).json({
@@ -458,15 +462,15 @@ const createEmissionData = async (req, res) => {
     const emissionDataId = uuidv4();
     const createResult = await query(`
       INSERT INTO emission_data (
-        id, organization_id, facility_id, facility_resource_id, 
+        id, organization_id, emission_resource_facility_config_id, 
         month, year, scope, consumption, consumption_unit, 
         emission_factor, heat_content, total_emissions, total_energy
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id, month, year, scope, consumption, consumption_unit, 
                 emission_factor, heat_content, total_emissions, total_energy, created_at
     `, [
-      emissionDataId, organizationId, facilityId, facilityResourceId,
+      emissionDataId, organizationId, facilityResourceId,
       month, year, facilityResource.scope, consumption, consumptionUnit,
       emissionFactor, heatContent, totalEmissions, totalEnergy
     ]);
@@ -625,12 +629,12 @@ const updateEmissionData = async (req, res) => {
 
     // Check if emission data exists and belongs to user's organization
     const existingDataResult = await query(`
-      SELECT ed.*, fr.emission_factor_id, ef.emission_factor, ef.heat_content
+      SELECT ed.*, erc.emission_factor_id, ef.emission_factor, ef.heat_content
       FROM emission_data ed
-      JOIN facility_resources fr ON ed.facility_resource_id = fr.id
-      JOIN emission_factors ef ON fr.emission_factor_id = ef.id
-      JOIN facilities f ON ed.facility_id = f.id
-      WHERE ed.id = $1 AND f.organization_id = $2
+      JOIN emission_resource_facility_configurations erfc ON ed.emission_resource_facility_config_id = erfc.id
+      JOIN emission_resource_configurations erc ON erfc.emission_resource_config_id = erc.id
+      JOIN emission_factors ef ON erc.emission_factor_id = ef.id
+      WHERE ed.id = $1 AND erfc.organization_id = $2
     `, [id, organizationId]);
 
     if (existingDataResult.rows.length === 0) {
@@ -751,7 +755,7 @@ const getEmissionDataById = async (req, res) => {
     const emissionDataResult = await query(`
       SELECT 
         ed.id,
-        ed.facility_id,
+        erfc.facility_id,
         ed.month,
         ed.year,
         ed.scope,
@@ -770,12 +774,13 @@ const getEmissionDataById = async (req, res) => {
         efl.version as library_version,
         f.name as facility_name
       FROM emission_data ed
-      JOIN facility_resources fr ON ed.facility_resource_id = fr.id
-      JOIN emission_resources er ON fr.resource_id = er.id
-      JOIN emission_factors ef ON fr.emission_factor_id = ef.id
+      JOIN emission_resource_facility_configurations erfc ON ed.emission_resource_facility_config_id = erfc.id
+      JOIN emission_resource_configurations erc ON erfc.emission_resource_config_id = erc.id
+      JOIN emission_resources er ON erc.resource_id = er.id
+      JOIN emission_factors ef ON erc.emission_factor_id = ef.id
       JOIN emission_factor_libraries efl ON ef.library_id = efl.id
-      JOIN facilities f ON ed.facility_id = f.id
-      WHERE ed.id = $1 AND f.organization_id = $2
+      JOIN facilities f ON erfc.facility_id = f.id
+      WHERE ed.id = $1 AND erfc.organization_id = $2
     `, [id, organizationId]);
 
     if (emissionDataResult.rows.length === 0) {

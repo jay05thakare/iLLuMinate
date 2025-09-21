@@ -193,7 +193,8 @@ const getOrganizationStats = async (req, res) => {
       FROM organizations o
       LEFT JOIN users u ON o.organization_id = u.organization_id AND u.status = 'active'
       LEFT JOIN facilities f ON o.organization_id = f.organization_id
-      LEFT JOIN emission_data ed ON o.organization_id = ed.organization_id
+      LEFT JOIN emission_resource_facility_configurations erfc ON o.organization_id = erfc.organization_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id
       LEFT JOIN production_data pd ON o.organization_id = pd.organization_id
       LEFT JOIN sustainability_targets st ON o.organization_id = st.organization_id
       WHERE o.organization_id = $1
@@ -208,7 +209,8 @@ const getOrganizationStats = async (req, res) => {
         MAX(ed.created_at) as last_emission_entry,
         MAX(pd.created_at) as last_production_entry
       FROM organizations o
-      LEFT JOIN emission_data ed ON o.organization_id = ed.organization_id 
+      LEFT JOIN emission_resource_facility_configurations erfc ON o.organization_id = erfc.organization_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id 
         AND ed.created_at >= CURRENT_DATE - INTERVAL '30 days'
       LEFT JOIN production_data pd ON o.organization_id = pd.organization_id 
         AND pd.created_at >= CURRENT_DATE - INTERVAL '30 days'
@@ -817,7 +819,8 @@ const getOrganizationFacilities = async (req, res) => {
         COUNT(DISTINCT ed.id) as emission_data_count,
         COUNT(DISTINCT pd.id) as production_data_count
       FROM facilities f
-      LEFT JOIN emission_data ed ON f.id = ed.facility_id
+      LEFT JOIN emission_resource_facility_configurations erfc ON f.id = erfc.facility_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id
       LEFT JOIN production_data pd ON f.id = pd.facility_id
       WHERE f.organization_id = $1
       GROUP BY f.id, f.name, f.description, f.location, f.status, f.created_at, f.updated_at
@@ -916,7 +919,8 @@ const getOrganizationFacilitiesForAI = async (req, res) => {
         COUNT(DISTINCT ed.id) as emission_data_count,
         COUNT(DISTINCT pd.id) as production_data_count
       FROM facilities f
-      LEFT JOIN emission_data ed ON f.id = ed.facility_id
+      LEFT JOIN emission_resource_facility_configurations erfc ON f.id = erfc.facility_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id
       LEFT JOIN production_data pd ON f.id = pd.facility_id
       WHERE f.organization_id = $1
       GROUP BY f.id, f.name, f.description, f.location, f.status, f.created_at, f.updated_at

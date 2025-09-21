@@ -84,7 +84,8 @@ const getOrganizationMetrics = async (req, res) => {
         SUM(ed.total_energy) as total_energy
       FROM facilities f
       LEFT JOIN production_data pd ON f.id = pd.facility_id AND pd.year = $2
-      LEFT JOIN emission_data ed ON f.id = ed.facility_id AND ed.year = $2
+      LEFT JOIN emission_resource_facility_configurations erfc ON f.id = erfc.facility_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id AND ed.year = $2
       WHERE f.organization_id = $1
       GROUP BY f.id, f.name, f.status, f.location
       ORDER BY f.name

@@ -51,7 +51,8 @@ const getFacilities = async (req, res) => {
         MAX(ed.created_at) as last_emission_entry,
         MAX(pd.created_at) as last_production_entry
       FROM facilities f
-      LEFT JOIN emission_data ed ON f.id = ed.facility_id
+      LEFT JOIN emission_resource_facility_configurations erfc ON f.id = erfc.facility_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id
       LEFT JOIN production_data pd ON f.id = pd.facility_id
       LEFT JOIN sustainability_targets st ON f.id = st.facility_id AND st.status = 'active'
       WHERE ${whereConditions.join(' AND ')}
@@ -135,7 +136,8 @@ const getFacilityById = async (req, res) => {
         SUM(CASE WHEN ed.year = EXTRACT(YEAR FROM CURRENT_DATE) THEN ed.total_emissions ELSE 0 END) as current_year_emissions,
         SUM(CASE WHEN pd.year = EXTRACT(YEAR FROM CURRENT_DATE) THEN pd.cement_production ELSE 0 END) as current_year_production
       FROM facilities f
-      LEFT JOIN emission_data ed ON f.id = ed.facility_id
+      LEFT JOIN emission_resource_facility_configurations erfc ON f.id = erfc.facility_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id
       LEFT JOIN production_data pd ON f.id = pd.facility_id
       LEFT JOIN sustainability_targets st ON f.id = st.facility_id AND st.status = 'active'
       LEFT JOIN facility_resources fr ON f.id = fr.facility_id AND fr.is_active = true
@@ -417,7 +419,8 @@ const deleteFacility = async (req, res) => {
         COUNT(DISTINCT ed.id) as emission_records,
         COUNT(DISTINCT pd.id) as production_records
       FROM facilities f
-      LEFT JOIN emission_data ed ON f.id = ed.facility_id
+      LEFT JOIN emission_resource_facility_configurations erfc ON f.id = erfc.facility_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id
       LEFT JOIN production_data pd ON f.id = pd.facility_id
       WHERE f.id = $1
     `, [id]);

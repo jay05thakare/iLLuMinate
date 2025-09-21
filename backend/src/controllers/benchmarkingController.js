@@ -128,7 +128,8 @@ const getBenchmarkingMetrics = async (req, res) => {
         END as carbon_intensity
       FROM organizations o
       LEFT JOIN facilities f ON o.organization_id = f.organization_id
-      LEFT JOIN emission_data ed ON f.id = ed.facility_id AND EXTRACT(YEAR FROM ed.created_at) = $2
+      LEFT JOIN emission_resource_facility_configurations erfc ON f.id = erfc.facility_id
+      LEFT JOIN emission_data ed ON erfc.id = ed.emission_resource_facility_config_id AND EXTRACT(YEAR FROM ed.created_at) = $2
       LEFT JOIN production_data pd ON f.id = pd.facility_id AND pd.year = $2
       WHERE o.organization_id = $1
       GROUP BY o.organization_id, o.name
