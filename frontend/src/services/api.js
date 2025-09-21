@@ -409,6 +409,23 @@ class ApiService {
     return this.get('/benchmarking/esg', params);
   }
 
+  // Industry Benchmarking API endpoints
+  async getIndustryBenchmarkingData(params = {}) {
+    return this.get('/industry-benchmarking/data', params);
+  }
+
+  async getRevenueComparison(params = {}) {
+    return this.get('/industry-benchmarking/revenue-comparison', params);
+  }
+
+  async getTargetsComparison(params = {}) {
+    return this.get('/industry-benchmarking/targets-comparison', params);
+  }
+
+  async getSourcesData(params = {}) {
+    return this.get('/industry-benchmarking/sources', params);
+  }
+
   // AI Service Methods
   async chatWithCementGPT(message, options = {}) {
     const payload = {

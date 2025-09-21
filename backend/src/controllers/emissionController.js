@@ -711,8 +711,9 @@ const deleteEmissionData = async (req, res) => {
     const existingDataResult = await query(`
       SELECT ed.*, f.organization_id 
       FROM emission_data ed
-      JOIN facilities f ON ed.facility_id = f.id
-      WHERE ed.id = $1 AND f.organization_id = $2
+      JOIN emission_resource_facility_configurations erfcf ON ed.emission_resource_facility_config_id = erfcf.id
+      JOIN facilities f ON erfcf.facility_id = f.id
+      WHERE ed.id = $1 AND erfcf.organization_id = $2
     `, [id, organizationId]);
 
     if (existingDataResult.rows.length === 0) {

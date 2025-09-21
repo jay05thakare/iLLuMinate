@@ -634,7 +634,7 @@ const EmissionsChart = ({ timePeriod, emissions }) => {
               <div 
                 className="w-full rounded-b-md transition-colors cursor-pointer relative"
                 style={{ 
-                  height: `${(scope2Data[index] / maxValue) * 140}px`,
+                  height: `${(scope2Data[index] / maxValue) * 280}px`,
                   backgroundColor: chartColors.secondary
                 }}
                 onMouseEnter={(e) => e.target.style.backgroundColor = chartColors.secondaryHover}
@@ -1042,8 +1042,9 @@ const EnergyChart = ({ timePeriod }) => {
       <div className="h-80 flex items-end justify-between space-x-2 relative">
         {labels.map((label, index) => {
           const totalEnergy = renewableData[index] + nonRenewableData[index];
-          const renewableHeight = (renewableData[index] / maxValue) * 280;
-          const nonRenewableHeight = (nonRenewableData[index] / maxValue) * 280;
+          const totalHeight = (totalEnergy / maxValue) * 280;
+          const renewableHeight = (renewableData[index] / totalEnergy) * totalHeight;
+          const nonRenewableHeight = (nonRenewableData[index] / totalEnergy) * totalHeight;
           
           return (
             <div key={label} className="flex-1 flex flex-col items-center space-y-1 group">

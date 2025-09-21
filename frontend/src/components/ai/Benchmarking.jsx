@@ -15,17 +15,17 @@ const Benchmarking = ({ facilityId }) => {
   const [selectedRegion, setSelectedRegion] = useState('global');
 
   const facility = facilities.find(f => f.id === facilityId);
-  // Mock benchmark data for now
-  const benchmarkData = [];
+  const [benchmarkData, setBenchmarkData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Mock current facility performance
-  const facilityPerformance = {
-    carbon_intensity: 850, // kgCO2e/tonne
-    energy_intensity: 3.2, // GJ/tonne
-    alternative_fuel_rate: 15, // %
-    renewable_energy_rate: 5, // %
-    water_intensity: 0.8, // m3/tonne
-    waste_to_landfill: 2.5, // kg/tonne
+  // Get facility performance from actual data or show empty state
+  const facilityPerformance = facility?.performance || {
+    carbon_intensity: null,
+    energy_intensity: null,
+    alternative_fuel_rate: null,
+    renewable_energy_rate: null,
+    water_intensity: null,
+    waste_to_landfill: null,
   };
 
   const metrics = [
@@ -35,8 +35,8 @@ const Benchmarking = ({ facilityId }) => {
       unit: 'kgCO2e/tonne',
       description: 'Total CO2 emissions per tonne of cement produced',
       icon: '🏭',
-      industryAvg: 820,
-      industryBest: 650,
+      industryAvg: benchmarkData.find(b => b.metric === 'carbon_intensity')?.industry_avg || null,
+      industryBest: benchmarkData.find(b => b.metric === 'carbon_intensity')?.industry_best || null,
       currentValue: facilityPerformance.carbon_intensity,
     },
     {
@@ -45,8 +45,8 @@ const Benchmarking = ({ facilityId }) => {
       unit: 'GJ/tonne',
       description: 'Total energy consumption per tonne of cement',
       icon: '⚡',
-      industryAvg: 3.0,
-      industryBest: 2.6,
+      industryAvg: benchmarkData.find(b => b.metric === 'energy_intensity')?.industry_avg || null,
+      industryBest: benchmarkData.find(b => b.metric === 'energy_intensity')?.industry_best || null,
       currentValue: facilityPerformance.energy_intensity,
     },
     {
@@ -55,8 +55,8 @@ const Benchmarking = ({ facilityId }) => {
       unit: '%',
       description: 'Percentage of energy from alternative fuels',
       icon: '🔥',
-      industryAvg: 20,
-      industryBest: 45,
+      industryAvg: benchmarkData.find(b => b.metric === 'alternative_fuel_rate')?.industry_avg || null,
+      industryBest: benchmarkData.find(b => b.metric === 'alternative_fuel_rate')?.industry_best || null,
       currentValue: facilityPerformance.alternative_fuel_rate,
     },
     {
@@ -65,8 +65,8 @@ const Benchmarking = ({ facilityId }) => {
       unit: '%',
       description: 'Percentage of electricity from renewable sources',
       icon: '🌱',
-      industryAvg: 25,
-      industryBest: 80,
+      industryAvg: benchmarkData.find(b => b.metric === 'renewable_energy_rate')?.industry_avg || null,
+      industryBest: benchmarkData.find(b => b.metric === 'renewable_energy_rate')?.industry_best || null,
       currentValue: facilityPerformance.renewable_energy_rate,
     },
     {
@@ -75,8 +75,8 @@ const Benchmarking = ({ facilityId }) => {
       unit: 'm³/tonne',
       description: 'Water consumption per tonne of cement',
       icon: '💧',
-      industryAvg: 0.9,
-      industryBest: 0.4,
+      industryAvg: benchmarkData.find(b => b.metric === 'water_intensity')?.industry_avg || null,
+      industryBest: benchmarkData.find(b => b.metric === 'water_intensity')?.industry_best || null,
       currentValue: facilityPerformance.water_intensity,
     },
     {
@@ -85,8 +85,8 @@ const Benchmarking = ({ facilityId }) => {
       unit: 'kg/tonne',
       description: 'Waste sent to landfill per tonne of cement',
       icon: '🗑️',
-      industryAvg: 3.2,
-      industryBest: 0.5,
+      industryAvg: benchmarkData.find(b => b.metric === 'waste_to_landfill')?.industry_avg || null,
+      industryBest: benchmarkData.find(b => b.metric === 'waste_to_landfill')?.industry_best || null,
       currentValue: facilityPerformance.waste_to_landfill,
     },
   ];
@@ -94,7 +94,11 @@ const Benchmarking = ({ facilityId }) => {
   const currentMetric = metrics.find(m => m.id === selectedMetric);
 
   const calculatePercentile = (value, metric) => {
-    // Mock percentile calculation
+    // Return null if no data available
+    if (!value || !metric.industryAvg || !metric.industryBest) {
+      return null;
+    }
+    
     const ratio = (metric.industryAvg - value) / (metric.industryAvg - metric.industryBest);
     
     // For metrics where lower is better
@@ -108,6 +112,7 @@ const Benchmarking = ({ facilityId }) => {
   };
 
   const getPerformanceLevel = (percentile) => {
+    if (percentile === null) return { level: 'No Data', color: 'gray', icon: InformationCircleIcon };
     if (percentile >= 80) return { level: 'Excellent', color: 'success', icon: TrophyIcon };
     if (percentile >= 60) return { level: 'Good', color: 'primary', icon: ArrowTrendingUpIcon };
     if (percentile >= 40) return { level: 'Average', color: 'warning', icon: ChartBarIcon };
@@ -117,15 +122,32 @@ const Benchmarking = ({ facilityId }) => {
   const percentile = calculatePercentile(currentMetric.currentValue, currentMetric);
   const performance = getPerformanceLevel(percentile);
 
-  // Mock peer data for comparison
-  const peerData = [
-    { name: 'Industry Leader', value: currentMetric.industryBest, isTarget: true },
-    { name: 'Industry Average', value: currentMetric.industryAvg, isAverage: true },
-    { name: facility?.name || 'Your Facility', value: currentMetric.currentValue, isCurrent: true },
-    { name: 'Regional Peer A', value: currentMetric.industryAvg * 0.95 },
-    { name: 'Regional Peer B', value: currentMetric.industryAvg * 1.1 },
-    { name: 'Regional Peer C', value: currentMetric.industryAvg * 0.85 },
-  ].sort((a, b) => {
+  // Dynamic peer data based on available benchmark data
+  const peerData = [];
+  
+  if (currentMetric.industryBest !== null) {
+    peerData.push({ name: 'Industry Leader', value: currentMetric.industryBest, isTarget: true });
+  }
+  if (currentMetric.industryAvg !== null) {
+    peerData.push({ name: 'Industry Average', value: currentMetric.industryAvg, isAverage: true });
+  }
+  if (currentMetric.currentValue !== null) {
+    peerData.push({ name: facility?.name || 'Your Facility', value: currentMetric.currentValue, isCurrent: true });
+  }
+  
+  // Add additional peer data from benchmark data if available
+  const additionalPeers = benchmarkData.filter(b => b.metric === selectedMetric && b.peer_data);
+  additionalPeers.forEach(peer => {
+    peerData.push({
+      name: peer.peer_name || 'Peer',
+      value: peer.peer_value,
+      isPeer: true
+    });
+  });
+
+  // Sort peer data
+  peerData.sort((a, b) => {
+    if (!a.value || !b.value) return 0;
     // Sort based on whether lower or higher is better
     if (['carbon_intensity', 'energy_intensity', 'water_intensity', 'waste_to_landfill'].includes(selectedMetric)) {
       return a.value - b.value; // Lower is better
@@ -197,160 +219,182 @@ const Benchmarking = ({ facilityId }) => {
             <div className="flex justify-between">
               <span className="text-sm text-gray-500">Current Value</span>
               <span className="text-lg font-bold text-gray-900">
-                {currentMetric.currentValue} {currentMetric.unit}
+                {currentMetric.currentValue !== null ? `${currentMetric.currentValue} ${currentMetric.unit}` : 'No Data'}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-500">Percentile Rank</span>
               <span className={`text-lg font-bold text-${performance.color}-600`}>
-                {Math.round(percentile)}th
+                {percentile !== null ? `${Math.round(percentile)}th` : 'N/A'}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className={`bg-${performance.color}-500 h-3 rounded-full transition-all duration-500`}
-                style={{ width: `${percentile}%` }}
-              ></div>
-            </div>
+            {percentile !== null ? (
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div 
+                  className={`bg-${performance.color}-500 h-3 rounded-full transition-all duration-500`}
+                  style={{ width: `${percentile}%` }}
+                ></div>
+              </div>
+            ) : (
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="bg-gray-300 h-3 rounded-full"></div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Industry Comparison */}
         <div className="card p-6">
           <h4 className="text-lg font-medium text-gray-900 mb-4">Industry Comparison</h4>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Industry Best</span>
-              <span className="text-sm font-medium text-success-600">
-                {currentMetric.industryBest} {currentMetric.unit}
-              </span>
+          {currentMetric.industryBest !== null || currentMetric.industryAvg !== null ? (
+            <div className="space-y-3">
+              {currentMetric.industryBest !== null && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Industry Best</span>
+                  <span className="text-sm font-medium text-success-600">
+                    {currentMetric.industryBest} {currentMetric.unit}
+                  </span>
+                </div>
+              )}
+              {currentMetric.industryAvg !== null && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Industry Average</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {currentMetric.industryAvg} {currentMetric.unit}
+                  </span>
+                </div>
+              )}
+              {currentMetric.currentValue !== null && currentMetric.industryBest !== null && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Gap to Best</span>
+                  <span className={`text-sm font-medium ${
+                    currentMetric.currentValue > currentMetric.industryBest ? 'text-danger-600' : 'text-success-600'
+                  }`}>
+                    {Math.abs(currentMetric.currentValue - currentMetric.industryBest).toFixed(1)} {currentMetric.unit}
+                  </span>
+                </div>
+              )}
+              {currentMetric.currentValue !== null && currentMetric.industryAvg !== null && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Gap to Average</span>
+                  <span className={`text-sm font-medium ${
+                    currentMetric.currentValue > currentMetric.industryAvg ? 'text-danger-600' : 'text-success-600'
+                  }`}>
+                    {Math.abs(currentMetric.currentValue - currentMetric.industryAvg).toFixed(1)} {currentMetric.unit}
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Industry Average</span>
-              <span className="text-sm font-medium text-gray-900">
-                {currentMetric.industryAvg} {currentMetric.unit}
-              </span>
+          ) : (
+            <div className="text-center py-8">
+              <InformationCircleIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-gray-500 text-sm">No industry benchmark data available</p>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Gap to Best</span>
-              <span className={`text-sm font-medium ${
-                currentMetric.currentValue > currentMetric.industryBest ? 'text-danger-600' : 'text-success-600'
-              }`}>
-                {Math.abs(currentMetric.currentValue - currentMetric.industryBest).toFixed(1)} {currentMetric.unit}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Gap to Average</span>
-              <span className={`text-sm font-medium ${
-                currentMetric.currentValue > currentMetric.industryAvg ? 'text-danger-600' : 'text-success-600'
-              }`}>
-                {Math.abs(currentMetric.currentValue - currentMetric.industryAvg).toFixed(1)} {currentMetric.unit}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Improvement Potential */}
         <div className="card p-6">
           <h4 className="text-lg font-medium text-gray-900 mb-4">Improvement Potential</h4>
-          <div className="space-y-4">
-            <div className="bg-primary-50 border border-primary-200 rounded-md p-3">
-              <div className="flex items-center mb-2">
-                <InformationCircleIcon className="h-4 w-4 text-primary-600 mr-1" />
-                <span className="text-sm font-medium text-primary-900">Quick Win</span>
+          {currentMetric.currentValue !== null ? (
+            <div className="space-y-4">
+              <div className="bg-primary-50 border border-primary-200 rounded-md p-3">
+                <div className="flex items-center mb-2">
+                  <InformationCircleIcon className="h-4 w-4 text-primary-600 mr-1" />
+                  <span className="text-sm font-medium text-primary-900">Analysis</span>
+                </div>
+                <p className="text-sm text-primary-800">
+                  {percentile !== null 
+                    ? `Your facility ranks in the ${Math.round(percentile)}th percentile for ${currentMetric.name.toLowerCase()}.`
+                    : `Current value: ${currentMetric.currentValue} ${currentMetric.unit}`
+                  }
+                </p>
               </div>
-              <p className="text-sm text-primary-800">
-                {selectedMetric === 'carbon_intensity' && 
-                  'Optimize kiln operation & increase alternative fuel usage to 25%'
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">Recommendation:</span>
+                {percentile !== null && percentile < 50 
+                  ? ' Focus on operational improvements and technology upgrades to move above industry average.'
+                  : ' Continue current practices and consider advanced technologies for further improvement.'
                 }
-                {selectedMetric === 'energy_intensity' && 
-                  'Install waste heat recovery system for 15% energy savings'
-                }
-                {selectedMetric === 'alternative_fuel_rate' && 
-                  'Introduce biomass and RDF to reach 30% substitution'
-                }
-                {selectedMetric === 'renewable_energy_rate' && 
-                  'Switch to renewable electricity contract'
-                }
-                {selectedMetric === 'water_intensity' && 
-                  'Implement water recycling systems'
-                }
-                {selectedMetric === 'waste_to_landfill' && 
-                  'Improve waste segregation and recycling'
-                }
-              </p>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">
-              <span className="font-medium">Potential Impact:</span>
-              {selectedMetric === 'carbon_intensity' && ' 10-15% reduction in 12 months'}
-              {selectedMetric === 'energy_intensity' && ' 12-18% improvement in 18 months'}
-              {selectedMetric === 'alternative_fuel_rate' && ' Reach 30% in 24 months'}
-              {selectedMetric === 'renewable_energy_rate' && ' Immediate 20% increase'}
-              {selectedMetric === 'water_intensity' && ' 20-30% reduction in 12 months'}
-              {selectedMetric === 'waste_to_landfill' && ' 50% reduction in 6 months'}
+          ) : (
+            <div className="text-center py-8">
+              <InformationCircleIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-gray-500 text-sm">No performance data available for analysis</p>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Peer Comparison Chart */}
       <div className="card p-6">
         <h4 className="text-lg font-medium text-gray-900 mb-4">Peer Comparison</h4>
-        <div className="space-y-3">
-          {peerData.map((peer, index) => (
-            <div
-              key={index}
-              className={`flex items-center justify-between p-3 rounded-lg ${
-                peer.isCurrent ? 'bg-primary-50 border border-primary-200' :
-                peer.isTarget ? 'bg-success-50 border border-success-200' :
-                peer.isAverage ? 'bg-warning-50 border border-warning-200' :
-                'bg-gray-50'
-              }`}
-            >
-              <div className="flex items-center">
-                <div className={`w-3 h-3 rounded-full mr-3 ${
-                  peer.isCurrent ? 'bg-primary-600' :
-                  peer.isTarget ? 'bg-success-600' :
-                  peer.isAverage ? 'bg-warning-600' :
-                  'bg-gray-400'
-                }`}></div>
-                <span className={`text-sm font-medium ${
-                  peer.isCurrent ? 'text-primary-900' : 'text-gray-900'
-                }`}>
-                  {peer.name}
-                </span>
-                {peer.isCurrent && (
-                  <BuildingOfficeIcon className="h-4 w-4 ml-2 text-primary-600" />
-                )}
-                {peer.isTarget && (
-                  <TrophyIcon className="h-4 w-4 ml-2 text-success-600" />
-                )}
-              </div>
-              <div className="flex items-center">
-                <span className={`text-lg font-bold mr-3 ${
-                  peer.isCurrent ? 'text-primary-600' : 'text-gray-900'
-                }`}>
-                  {peer.value} {currentMetric.unit}
-                </span>
-                <div className={`w-20 h-2 bg-gray-200 rounded-full overflow-hidden`}>
-                  <div
-                    className={`h-full transition-all duration-500 ${
-                      peer.isCurrent ? 'bg-primary-600' :
-                      peer.isTarget ? 'bg-success-600' :
-                      peer.isAverage ? 'bg-warning-600' :
-                      'bg-gray-400'
-                    }`}
-                    style={{
-                      width: `${Math.max(10, Math.min(100, 
-                        (peer.value / Math.max(...peerData.map(p => p.value))) * 100
-                      ))}%`
-                    }}
-                  ></div>
+        {peerData.length > 0 ? (
+          <div className="space-y-3">
+            {peerData.map((peer, index) => (
+              <div
+                key={index}
+                className={`flex items-center justify-between p-3 rounded-lg ${
+                  peer.isCurrent ? 'bg-primary-50 border border-primary-200' :
+                  peer.isTarget ? 'bg-success-50 border border-success-200' :
+                  peer.isAverage ? 'bg-warning-50 border border-warning-200' :
+                  'bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center">
+                  <div className={`w-3 h-3 rounded-full mr-3 ${
+                    peer.isCurrent ? 'bg-primary-600' :
+                    peer.isTarget ? 'bg-success-600' :
+                    peer.isAverage ? 'bg-warning-600' :
+                    'bg-gray-400'
+                  }`}></div>
+                  <span className={`text-sm font-medium ${
+                    peer.isCurrent ? 'text-primary-900' : 'text-gray-900'
+                  }`}>
+                    {peer.name}
+                  </span>
+                  {peer.isCurrent && (
+                    <BuildingOfficeIcon className="h-4 w-4 ml-2 text-primary-600" />
+                  )}
+                  {peer.isTarget && (
+                    <TrophyIcon className="h-4 w-4 ml-2 text-success-600" />
+                  )}
+                </div>
+                <div className="flex items-center">
+                  <span className={`text-lg font-bold mr-3 ${
+                    peer.isCurrent ? 'text-primary-600' : 'text-gray-900'
+                  }`}>
+                    {peer.value} {currentMetric.unit}
+                  </span>
+                  <div className={`w-20 h-2 bg-gray-200 rounded-full overflow-hidden`}>
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        peer.isCurrent ? 'bg-primary-600' :
+                        peer.isTarget ? 'bg-success-600' :
+                        peer.isAverage ? 'bg-warning-600' :
+                        'bg-gray-400'
+                      }`}
+                      style={{
+                        width: `${Math.max(10, Math.min(100, 
+                          (peer.value / Math.max(...peerData.map(p => p.value))) * 100
+                        ))}%`
+                      }}
+                    ></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <InformationCircleIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 mb-2">No peer comparison data available</p>
+            <p className="text-sm text-gray-400">
+              Peer data will appear when benchmark information is loaded.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Metric Description */}
@@ -358,25 +402,15 @@ const Benchmarking = ({ facilityId }) => {
         <h4 className="text-lg font-medium text-gray-900 mb-2">{currentMetric.name}</h4>
         <p className="text-gray-600 mb-4">{currentMetric.description}</p>
         <div className="bg-gray-50 rounded-lg p-4">
-          <h5 className="font-medium text-gray-900 mb-2">Industry Context</h5>
+          <h5 className="font-medium text-gray-900 mb-2">Current Status</h5>
           <p className="text-sm text-gray-600">
-            {selectedMetric === 'carbon_intensity' && 
-              'The cement industry accounts for 8% of global CO2 emissions. Leading companies are targeting 25-30% reductions by 2030 through alternative fuels, energy efficiency, and process optimization.'
+            {currentMetric.currentValue !== null 
+              ? `Your facility's current ${currentMetric.name.toLowerCase()} is ${currentMetric.currentValue} ${currentMetric.unit}.`
+              : `No current data available for ${currentMetric.name.toLowerCase()}.`
             }
-            {selectedMetric === 'energy_intensity' && 
-              'Energy represents 30-40% of cement production costs. Best-in-class facilities achieve 2.6-2.8 GJ/tonne through waste heat recovery, efficient motors, and optimized kiln operations.'
-            }
-            {selectedMetric === 'alternative_fuel_rate' && 
-              'Alternative fuels reduce both emissions and costs. European leaders achieve 40-60% substitution rates while maintaining clinker quality. Common fuels include biomass, RDF, and industrial waste.'
-            }
-            {selectedMetric === 'renewable_energy_rate' && 
-              'Renewable electricity adoption is accelerating with falling costs. Many facilities are installing on-site solar or signing renewable PPAs to reduce Scope 2 emissions.'
-            }
-            {selectedMetric === 'water_intensity' && 
-              'Water scarcity drives efficiency improvements. Leading facilities recycle 90%+ of process water and implement closed-loop cooling systems.'
-            }
-            {selectedMetric === 'waste_to_landfill' && 
-              'Circular economy principles minimize landfill waste. Best facilities achieve near-zero waste through on-site recycling and alternative use programs.'
+            {currentMetric.industryAvg !== null 
+              ? ` Industry average is ${currentMetric.industryAvg} ${currentMetric.unit}.`
+              : ' Industry benchmark data not available.'
             }
           </p>
         </div>

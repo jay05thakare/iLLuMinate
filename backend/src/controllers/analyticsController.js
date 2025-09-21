@@ -39,13 +39,14 @@ const getOrganizationTimeSeries = async (req, res) => {
         SUM(ed.total_emissions) as total_emissions,
         SUM(ed.total_energy) as total_energy,
         COUNT(*) as data_points,
-        COUNT(DISTINCT ed.facility_id) as active_facilities,
+        COUNT(DISTINCT erfcf.facility_id) as active_facilities,
         AVG(ed.emission_factor) as avg_emission_factor,
         er.category
       FROM emission_data ed
-      JOIN facility_resources fr ON ed.facility_resource_id = fr.id
-      JOIN emission_resources er ON fr.resource_id = er.id
-      WHERE ed.organization_id = $1 
+      JOIN emission_resource_facility_configurations erfcf ON ed.emission_resource_facility_config_id = erfcf.id
+      JOIN emission_resource_configurations erc ON erfcf.emission_resource_config_id = erc.id
+      JOIN emission_resources er ON erc.resource_id = er.id
+      WHERE erfcf.organization_id = $1 
         AND ed.year >= $2 AND ed.year <= $3
       GROUP BY ed.year, ed.month, ed.scope, er.category
       ORDER BY ed.year, ed.month
@@ -178,9 +179,10 @@ const getFacilityTimeSeries = async (req, res) => {
         er.resource_name,
         er.resource_type
       FROM emission_data ed
-      JOIN facility_resources fr ON ed.facility_resource_id = fr.id
-      JOIN emission_resources er ON fr.resource_id = er.id
-      WHERE ed.facility_id = $1 
+      JOIN emission_resource_facility_configurations erfcf ON ed.emission_resource_facility_config_id = erfcf.id
+      JOIN emission_resource_configurations erc ON erfcf.emission_resource_config_id = erc.id
+      JOIN emission_resources er ON erc.resource_id = er.id
+      WHERE erfcf.facility_id = $1 
         AND ed.year >= $2 AND ed.year <= $3
       ORDER BY ed.year, ed.month, er.category
     `;
@@ -297,7 +299,8 @@ const getAdvancedTrendAnalysis = async (req, res) => {
             'emissions' as metric,
             'kgCO2e' as unit
           FROM emission_data ed
-          WHERE ed.organization_id = $1
+          JOIN emission_resource_facility_configurations erfcf ON ed.emission_resource_facility_config_id = erfcf.id
+          WHERE erfcf.organization_id = $1
           GROUP BY ed.year, ed.month
           ORDER BY ed.year, ed.month
         `;
@@ -329,11 +332,12 @@ const getAdvancedTrendAnalysis = async (req, res) => {
             'intensity' as metric,
             'kgCO2e/tonne' as unit
           FROM emission_data ed
+          JOIN emission_resource_facility_configurations erfcf ON ed.emission_resource_facility_config_id = erfcf.id
           FULL OUTER JOIN production_data pd ON 
-            ed.organization_id = pd.organization_id 
+            erfcf.organization_id = pd.organization_id 
             AND ed.year = pd.year 
             AND ed.month = pd.month
-          WHERE COALESCE(ed.organization_id, pd.organization_id) = $1
+          WHERE COALESCE(erfcf.organization_id, pd.organization_id) = $1
           GROUP BY COALESCE(ed.year, pd.year), COALESCE(ed.month, pd.month)
           HAVING SUM(pd.cement_production) > 0
           ORDER BY year, month

@@ -37,13 +37,14 @@ const getOrganizationMetrics = async (req, res) => {
         SUM(ed.total_energy) as energy,
         AVG(ed.emission_factor) as avg_emission_factor,
         COUNT(*) as data_points,
-        COUNT(DISTINCT ed.facility_id) as facilities,
+        COUNT(DISTINCT erfcf.facility_id) as facilities,
         er.category,
         er.resource_type
       FROM emission_data ed
-      JOIN facility_resources fr ON ed.facility_resource_id = fr.id
-      JOIN emission_resources er ON fr.resource_id = er.id
-      WHERE ed.organization_id = $1 
+      JOIN emission_resource_facility_configurations erfcf ON ed.emission_resource_facility_config_id = erfcf.id
+      JOIN emission_resource_configurations erc ON erfcf.emission_resource_config_id = erc.id
+      JOIN emission_resources er ON erc.resource_id = er.id
+      WHERE erfcf.organization_id = $1 
         AND ed.year = $2
       GROUP BY ed.year, ed.month, ed.scope, er.category, er.resource_type
       ORDER BY ed.year, ed.month, ed.scope
@@ -186,7 +187,8 @@ const getFacilityMetrics = async (req, res) => {
         ed.consumption,
         ed.consumption_unit
       FROM emission_data ed
-      WHERE ed.facility_id = $1 
+      JOIN emission_resource_facility_configurations erfcf ON ed.emission_resource_facility_config_id = erfcf.id
+      WHERE erfcf.facility_id = $1 
         AND ed.year >= $2
       ORDER BY ed.year DESC, ed.month DESC
     `;
@@ -318,7 +320,8 @@ const getFacilityComparison = async (req, res) => {
             SUM(ed.total_energy) as total_energy,
             COUNT(*) as emission_entries
           FROM emission_data ed
-          WHERE ed.facility_id = $1 AND ed.year = $2
+          JOIN emission_resource_facility_configurations erfcf ON ed.emission_resource_facility_config_id = erfcf.id
+          WHERE erfcf.facility_id = $1 AND ed.year = $2
         `, [facilityId, parseInt(year)]);
 
         // Get production data
