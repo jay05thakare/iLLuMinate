@@ -4,6 +4,7 @@
  */
 
 const API_BASE_URL = 'http://localhost:3000/api';
+const AI_API_BASE_URL = 'http://localhost:8000/api';
 
 class ApiError extends Error {
   constructor(message, status, code) {
@@ -69,6 +70,47 @@ class ApiService {
         'Network error or server unavailable',
         0,
         'NETWORK_ERROR'
+      );
+    }
+  }
+
+  // AI Service request method
+  async aiRequest(endpoint, options = {}) {
+    const url = `${AI_API_BASE_URL}${endpoint}`;
+    const token = this.getToken();
+
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    try {
+      const response = await fetch(url, config);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new ApiError(
+          data.error?.message || data.message || 'AI API request failed',
+          response.status,
+          data.error?.code || data.code
+        );
+      }
+
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      
+      // Network or other errors
+      throw new ApiError(
+        'AI service unavailable or network error',
+        0,
+        'AI_SERVICE_ERROR'
       );
     }
   }
@@ -367,9 +409,72 @@ class ApiService {
     return this.get('/benchmarking/esg', params);
   }
 
+  // AI Service Methods
+  async chatWithCementGPT(message, options = {}) {
+    const payload = {
+      message,
+      user_id: options.userId || null,
+      facility_id: options.facilityId || null,
+      session_id: options.sessionId || null,
+    };
+
+    return this.aiRequest('/chat/cement-gpt', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async createChatSession(userId = null, facilityId = null) {
+    return this.aiRequest('/chat/sessions', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId,
+        facility_id: facilityId,
+      }),
+    });
+  }
+
+  async getChatHistory(sessionId, count = null) {
+    const params = count ? { count } : {};
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/chat/sessions/${sessionId}/history?${queryString}` : `/chat/sessions/${sessionId}/history`;
+    
+    return this.aiRequest(url, { method: 'GET' });
+  }
+
+  async getChatSessions(userId = null, facilityId = null) {
+    const params = {};
+    if (userId) params.user_id = userId;
+    if (facilityId) params.facility_id = facilityId;
+    
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/chat/sessions?${queryString}` : '/chat/sessions';
+    
+    return this.aiRequest(url, { method: 'GET' });
+  }
+
+  async deleteChatSession(sessionId) {
+    return this.aiRequest(`/chat/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getChatStats() {
+    return this.aiRequest('/chat/stats', { method: 'GET' });
+  }
+
+  async getAIModelInfo() {
+    return this.aiRequest('/chat/model-info', { method: 'GET' });
+  }
+
   // Health Check
   async healthCheck() {
     return fetch(`${this.baseURL.replace('/api', '')}/health`).then(res => res.json());
+  }
+
+  // AI Service Health Check
+  async aiHealthCheck() {
+    return fetch(`${AI_API_BASE_URL.replace('/api', '')}/`).then(res => res.json());
   }
 }
 

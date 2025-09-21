@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     port: int = 8000
     
     # CORS
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    cors_origins: str = "http://localhost:3000,http://localhost:5173"
     
     # Database
     database_url: str = ""
@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     rate_limit_burst: int = 100
     
     class Config:
-        env_file = "../../../.env"
+        env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
         
@@ -72,8 +72,8 @@ class Settings(BaseSettings):
                 f"@{self.db_host}:{self.db_port}/{self.db_name}"
             )
         
-        # Parse CORS origins if string
-        if isinstance(self.cors_origins, str):
+        # Parse CORS origins string to list
+        if hasattr(self, 'cors_origins') and isinstance(self.cors_origins, str):
             self.cors_origins = [origin.strip() for origin in self.cors_origins.split(",")]
 
 

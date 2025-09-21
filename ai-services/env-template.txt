@@ -1,0 +1,72 @@
+# iLLuMinate AI Services Environment Variables Template
+# Copy this content to a .env file in the same directory
+
+# ============================================================================
+# APPLICATION CONFIGURATION
+# ============================================================================
+
+# Environment: development, staging, production
+ENVIRONMENT=development
+
+# Server Configuration
+PORT=8000
+LOG_LEVEL=INFO
+
+# ============================================================================
+# OPENAI CONFIGURATION
+# ============================================================================
+
+# OpenAI API Key - GET FROM: https://platform.openai.com/api-keys
+# IMPORTANT: Replace 'your_openai_api_key_here' with your actual API key
+OPENAI_API_KEY=your_openai_api_key_here
+
+# OpenAI Model Configuration
+OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_MAX_TOKENS=1000
+OPENAI_TEMPERATURE=0.7
+
+# ============================================================================
+# DATABASE CONFIGURATION
+# ============================================================================
+
+# PostgreSQL Database Settings (matches your backend)
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=illuminate_db
+DB_USER=illuminate
+DB_PASSWORD=your_database_password_here
+
+# ============================================================================
+# BACKEND API INTEGRATION
+# ============================================================================
+
+# Node.js Backend Configuration
+BACKEND_API_URL=http://localhost:3000
+BACKEND_API_TIMEOUT=30
+
+# ============================================================================
+# SECURITY CONFIGURATION
+# ============================================================================
+
+# JWT Configuration (should match your backend)
+JWT_SECRET=your_jwt_secret_key_here_minimum_32_characters
+JWT_ALGORITHM=HS256
+
+# ============================================================================
+# CORS CONFIGURATION
+# ============================================================================
+
+# Allowed Origins (comma-separated)
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8000
+
+# ============================================================================
+# AI MODEL CONFIGURATION
+# ============================================================================
+
+# Model Caching and Performance
+MODEL_CACHE_SIZE=100
+MODEL_TIMEOUT=60
+
+# Rate Limiting
+RATE_LIMIT_PER_MINUTE=60
+RATE_LIMIT_BURST=100

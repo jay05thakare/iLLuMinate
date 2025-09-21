@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import apiService from '../../services/api';
+import ReactMarkdown from 'react-markdown';
 import {
   PaperAirplaneIcon,
   UserCircleIcon,
   CpuChipIcon,
   ClockIcon,
   ArrowPathIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
 const CementGPT = () => {
@@ -29,6 +32,9 @@ What would you like to explore today?`,
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [error, setError] = useState(null);
+  const [aiServiceStatus, setAiServiceStatus] = useState('checking');
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -39,8 +45,39 @@ What would you like to explore today?`,
     scrollToBottom();
   }, [messages]);
 
+  // Check AI service status and initialize session
+  useEffect(() => {
+    const initializeAIService = async () => {
+      try {
+        setAiServiceStatus('checking');
+        
+        // Check if AI service is available
+        await apiService.aiHealthCheck();
+        setAiServiceStatus('available');
+        
+        // Create a new chat session
+        const sessionResponse = await apiService.createChatSession(
+          user?.id || null,
+          null // Could add facility ID here if available
+        );
+        
+        if (sessionResponse.success) {
+          setSessionId(sessionResponse.data.session_id);
+        }
+        
+        setError(null);
+      } catch (error) {
+        console.error('AI service initialization failed:', error);
+        setAiServiceStatus('unavailable');
+        setError(error.message || 'AI service is currently unavailable');
+      }
+    };
+
+    initializeAIService();
+  }, [user?.id]);
+
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim() || isLoading || aiServiceStatus !== 'available') return;
 
     const userMessage = {
       id: messages.length + 1,
@@ -50,126 +87,52 @@ What would you like to explore today?`,
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentMessage = inputMessage;
     setInputMessage('');
     setIsLoading(true);
+    setError(null);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(inputMessage);
-      const assistantMessage = {
+    try {
+      // Call the AI service
+      const response = await apiService.chatWithCementGPT(currentMessage, {
+        userId: user?.id,
+        sessionId: sessionId,
+        facilityId: null, // Could add facility context here
+      });
+
+      if (response.success) {
+        const assistantMessage = {
+          id: messages.length + 2,
+          type: 'assistant',
+          content: response.data.response,
+          timestamp: response.data.timestamp || new Date().toISOString(),
+          model: response.data.model,
+          usage: response.data.usage,
+          demoMode: response.data.demo_mode,
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        throw new Error(response.message || 'Failed to get AI response');
+      }
+    } catch (error) {
+      console.error('Error sending message to CementGPT:', error);
+      
+      // Add error message to chat
+      const errorMessage = {
         id: messages.length + 2,
-        type: 'assistant',
-        content: aiResponse,
+        type: 'error',
+        content: `I'm sorry, I encountered an error: ${error.message}. Please try again or check if the AI service is running.`,
         timestamp: new Date().toISOString(),
       };
       
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages(prev => [...prev, errorMessage]);
+      setError(error.message);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
-  const generateAIResponse = (input) => {
-    const lowerInput = input.toLowerCase();
-    
-    if (lowerInput.includes('emission') || lowerInput.includes('carbon')) {
-      return `Based on your facility data, I can see you're interested in emissions management. Here are some insights:
-
-**Current Performance:**
-• Your facility's carbon intensity is approximately 850 kgCO2e/tonne cement
-• This is slightly above the industry average of 820 kgCO2e/tonne
-
-**Recommendations:**
-1. **Increase Alternative Fuel Usage**: Currently at 15%, industry leaders achieve 25-30%
-2. **Energy Efficiency**: Consider waste heat recovery systems
-3. **Process Optimization**: Optimize kiln temperature profiles
-
-Would you like me to analyze specific emission sources or provide more detailed recommendations?`;
-    }
-    
-    if (lowerInput.includes('fuel') || lowerInput.includes('alternative')) {
-      return `Great question about alternative fuels! Based on your location and facility type, here are suitable options:
-
-**Recommended Alternative Fuels:**
-1. **Biomass** - 25% emission reduction, high availability in your region
-2. **Refuse Derived Fuel (RDF)** - Cost-effective, stable supply chain
-3. **Used Tires** - High energy content, good economics
-
-**Implementation Strategy:**
-• Start with 5-10% substitution rate
-• Gradually increase to 25-30% over 2 years
-• Monitor clinker quality throughout transition
-
-**Expected Benefits:**
-• 15-20% reduction in CO2 emissions
-• 10-15% reduction in fuel costs
-• Improved waste management compliance
-
-Would you like specific implementation guidance for any of these fuels?`;
-    }
-    
-    if (lowerInput.includes('target') || lowerInput.includes('goal')) {
-      return `Setting meaningful sustainability targets is crucial. Here's my analysis for your facility:
-
-**Recommended Targets for 2030:**
-1. **Carbon Intensity**: Reduce to 650 kgCO2e/tonne (25% reduction)
-2. **Alternative Fuels**: Increase to 30% of total fuel mix
-3. **Energy Efficiency**: Improve by 15% through heat recovery
-
-**Pathway to Net Zero by 2050:**
-• **Phase 1 (2024-2030)**: Process optimization & alternative fuels
-• **Phase 2 (2030-2040)**: Carbon capture technology implementation  
-• **Phase 3 (2040-2050)**: Full decarbonization with renewable energy
-
-**Quick Wins:**
-• Optimize raw material mix (limestone alternatives)
-• Implement predictive maintenance for energy efficiency
-• Switch to renewable electricity contracts
-
-Would you like me to create a detailed roadmap for any of these targets?`;
-    }
-    
-    if (lowerInput.includes('benchmark') || lowerInput.includes('compare')) {
-      return `Here's how your facility compares to industry benchmarks:
-
-**Performance Comparison:**
-• **Carbon Intensity**: 850 kgCO2e/t (Industry avg: 820 kgCO2e/t) - 55th percentile
-• **Energy Efficiency**: 3.2 GJ/t (Best practice: 2.8 GJ/t) - 60th percentile
-• **Alternative Fuel Rate**: 15% (Industry leaders: 25-30%) - 40th percentile
-
-**Regional Comparison:**
-You rank #8 out of 15 cement plants in your region.
-
-**Improvement Opportunities:**
-1. **Top Priority**: Increase alternative fuel usage (+10 percentile points)
-2. **Medium Priority**: Energy efficiency improvements (+15 percentile points)
-3. **Long-term**: Carbon capture readiness
-
-**Peer Learning:**
-Similar facilities have achieved 20% emission reductions through:
-• Advanced process control systems
-• Waste heat recovery
-• Alternative raw materials
-
-Would you like detailed benchmarking data for any specific metric?`;
-    }
-    
-    // Default response
-    return `I understand you're asking about "${input}". As CementGPT, I'm here to help with cement industry sustainability challenges.
-
-**I can assist with:**
-• **Technical Analysis**: Process optimization, energy efficiency
-• **Environmental Impact**: Emission reduction strategies, alternative fuels
-• **Compliance**: Environmental regulations, reporting requirements
-• **Economics**: Cost-benefit analysis of sustainability initiatives
-• **Innovation**: Latest technologies and best practices
-
-Could you provide more specific details about what you'd like to explore? For example:
-- "How can I reduce my facility's carbon footprint?"
-- "What alternative fuels work best for my kiln type?"
-- "Help me set realistic emission reduction targets"
-
-I'm here to provide data-driven insights tailored to your facility's needs!`;
-  };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -203,11 +166,32 @@ I'm here to provide data-driven insights tailored to your facility's needs!`;
           </div>
           <div>
             <h3 className="text-lg font-medium text-gray-900">CementGPT</h3>
-            <p className="text-sm text-gray-500">AI-powered cement industry assistant</p>
+            <div className="flex items-center space-x-2">
+              <p className="text-sm text-gray-500">AI-powered cement industry assistant</p>
+              <div className="flex items-center space-x-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  aiServiceStatus === 'available' ? 'bg-green-500' :
+                  aiServiceStatus === 'checking' ? 'bg-yellow-500 animate-pulse' :
+                  'bg-red-500'
+                }`}></div>
+                <span className={`text-xs font-medium ${
+                  aiServiceStatus === 'available' ? 'text-green-600' :
+                  aiServiceStatus === 'checking' ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  {aiServiceStatus === 'available' ? 'ONLINE' :
+                   aiServiceStatus === 'checking' ? 'CONNECTING' :
+                   'OFFLINE'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
         <button
-          onClick={() => setMessages(messages.slice(0, 1))}
+          onClick={() => {
+            setMessages(messages.slice(0, 1));
+            setError(null);
+          }}
           className="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100"
           title="Clear conversation"
         >
@@ -226,6 +210,10 @@ I'm here to provide data-driven insights tailored to your facility's needs!`;
               <div className={`flex-shrink-0 ${message.type === 'user' ? 'ml-3' : 'mr-3'}`}>
                 {message.type === 'user' ? (
                   <UserCircleIcon className="h-8 w-8 text-gray-400" />
+                ) : message.type === 'error' ? (
+                  <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+                    <ExclamationTriangleIcon className="h-5 w-5 text-red-600" />
+                  </div>
                 ) : (
                   <div className="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center">
                     <CpuChipIcon className="h-5 w-5 text-primary-600" />
@@ -236,15 +224,55 @@ I'm here to provide data-driven insights tailored to your facility's needs!`;
                 className={`rounded-lg p-3 ${
                   message.type === 'user'
                     ? 'bg-primary-600 text-white'
+                    : message.type === 'error'
+                    ? 'bg-red-50 text-red-900 border border-red-200'
                     : 'bg-gray-100 text-gray-900'
                 }`}
               >
-                <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-                <div className={`text-xs mt-2 flex items-center ${
-                  message.type === 'user' ? 'text-primary-200' : 'text-gray-500'
+                <div className="text-sm">
+                  {message.type === 'assistant' ? (
+                    <div className="prose prose-sm max-w-none prose-gray">
+                      <ReactMarkdown 
+                        components={{
+                          // Custom components for better styling
+                          ul: ({children}) => <ul className="list-disc list-inside space-y-1 my-2 text-gray-900">{children}</ul>,
+                          ol: ({children}) => <ol className="list-decimal list-inside space-y-1 my-2 text-gray-900">{children}</ol>,
+                          li: ({children}) => <li className="leading-relaxed text-gray-900">{children}</li>,
+                          p: ({children}) => <p className="mb-2 last:mb-0 text-gray-900 leading-relaxed">{children}</p>,
+                          strong: ({children}) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                          em: ({children}) => <em className="italic text-gray-900">{children}</em>,
+                          code: ({children}) => <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-900">{children}</code>,
+                          h1: ({children}) => <h1 className="text-lg font-semibold mb-2 text-gray-900">{children}</h1>,
+                          h2: ({children}) => <h2 className="text-base font-semibold mb-2 text-gray-900">{children}</h2>,
+                          h3: ({children}) => <h3 className="text-sm font-semibold mb-1 text-gray-900">{children}</h3>,
+                          blockquote: ({children}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-700">{children}</blockquote>,
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                  )}
+                </div>
+                {message.demoMode && (
+                  <div className="text-xs mt-2 bg-yellow-100 border border-yellow-200 rounded px-2 py-1 text-yellow-800">
+                    Demo Mode: Using sample responses
+                  </div>
+                )}
+                <div className={`text-xs mt-2 flex items-center justify-between ${
+                  message.type === 'user' ? 'text-primary-200' : 
+                  message.type === 'error' ? 'text-red-500' : 'text-gray-500'
                 }`}>
-                  <ClockIcon className="h-3 w-3 mr-1" />
-                  {formatTimestamp(message.timestamp)}
+                  <div className="flex items-center">
+                    <ClockIcon className="h-3 w-3 mr-1" />
+                    {formatTimestamp(message.timestamp)}
+                  </div>
+                  {message.model && (
+                    <div className="text-xs opacity-75">
+                      {message.model}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -270,8 +298,20 @@ I'm here to provide data-driven insights tailored to your facility's needs!`;
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Error notification */}
+      {aiServiceStatus === 'unavailable' && (
+        <div className="px-4 py-3 bg-red-50 border-t border-red-200">
+          <div className="flex items-center space-x-2">
+            <ExclamationTriangleIcon className="h-4 w-4 text-red-500" />
+            <span className="text-sm text-red-700">
+              AI service is currently unavailable. Please check if the AI microservice is running.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Suggested Questions */}
-      {messages.length === 1 && (
+      {messages.length === 1 && aiServiceStatus === 'available' && (
         <div className="px-4 py-2 border-t border-gray-100">
           <p className="text-xs text-gray-500 mb-2">Try asking:</p>
           <div className="flex flex-wrap gap-2">
@@ -280,6 +320,7 @@ I'm here to provide data-driven insights tailored to your facility's needs!`;
                 key={index}
                 onClick={() => setInputMessage(question)}
                 className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded-md transition-colors"
+                disabled={aiServiceStatus !== 'available'}
               >
                 {question}
               </button>
@@ -295,15 +336,26 @@ I'm here to provide data-driven insights tailored to your facility's needs!`;
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask CementGPT about sustainability, emissions, or process optimization..."
-            className="flex-1 resize-none border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            placeholder={
+              aiServiceStatus === 'available' 
+                ? "Ask CementGPT about sustainability, emissions, or process optimization..."
+                : aiServiceStatus === 'checking'
+                ? "Connecting to AI service..."
+                : "AI service unavailable"
+            }
+            className="flex-1 resize-none border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
             rows={2}
-            disabled={isLoading}
+            disabled={isLoading || aiServiceStatus !== 'available'}
           />
           <button
             onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isLoading}
+            disabled={!inputMessage.trim() || isLoading || aiServiceStatus !== 'available'}
             className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            title={
+              aiServiceStatus !== 'available' 
+                ? "AI service must be online to send messages"
+                : "Send message"
+            }
           >
             <PaperAirplaneIcon className="h-4 w-4" />
           </button>
