@@ -16,7 +16,7 @@ const config = {
   appUrl: process.env.APP_URL || 'http://localhost:3000',
 
   // CORS
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:5174',
 
   // Database
   database: {

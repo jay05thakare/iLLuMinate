@@ -691,9 +691,10 @@ async function seedJKCementOperationalData(orgId, mangrolPlantId, muddapurPlantI
   logger.info('Verifying seeded data...');
   
   const totalEmissionsResult = await query(`
-    SELECT SUM(total_emissions) as total_emissions 
-    FROM emission_data 
-    WHERE year = 2025 AND organization_id = $1 AND emission_resource_facility_config_id IS NOT NULL
+    SELECT SUM(ed.total_emissions) as total_emissions 
+    FROM emission_data ed
+    JOIN emission_resource_facility_configurations erfcc ON ed.emission_resource_facility_config_id = erfcc.id
+    WHERE ed.year = 2025 AND erfcc.organization_id = $1
   `, [orgId]);
   
   const totalProductionResult = await query(`
